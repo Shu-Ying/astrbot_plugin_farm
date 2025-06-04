@@ -8,6 +8,9 @@ class Config:
     # 服务器地址
     sFarmServerUrl: str
 
+    # 指令前綴
+    sFarmPrefix: str
+
     # 签到状态
     bSignStatus = True
 

@@ -92,7 +92,10 @@ class AsyncHttpx:
         if not headers:
             headers = get_user_agent()
         _proxy = proxy or (cls.proxy if use_proxy else None)
-        async with httpx.AsyncClient(proxies=_proxy, verify=verify) as client:  # type: ignore
+        async with httpx.AsyncClient(verify=verify) as client:
+            if _proxy:
+                client.proxies = _proxy
+
             return await client.get(
                 url,
                 params=params,
@@ -131,7 +134,10 @@ class AsyncHttpx:
         if not headers:
             headers = get_user_agent()
         _proxy = proxy or (cls.proxy if use_proxy else None)
-        async with httpx.AsyncClient(proxies=_proxy, verify=verify) as client:  # type: ignore
+        async with httpx.AsyncClient(verify=verify) as client:
+            if _proxy:
+                client.proxies = _proxy
+
             return await client.head(
                 url,
                 params=params,
@@ -178,7 +184,10 @@ class AsyncHttpx:
         if not headers:
             headers = get_user_agent()
         _proxy = proxy or (cls.proxy if use_proxy else None)
-        async with httpx.AsyncClient(proxies=_proxy, verify=verify) as client:  # type: ignore
+        async with httpx.AsyncClient(verify=verify) as client:
+            if _proxy:
+                client.proxies = _proxy
+
             return await client.post(
                 url,
                 content=content,

@@ -15,14 +15,14 @@ from ..tool import g_pToolManager
 
 class CFarmManager:
     @classmethod
-    async def drawFarmByUid(cls, uid: str) -> bytes:
+    async def drawFarmByUid(cls, uid: str) -> str:
         """绘制用户农场
 
         Args:
             uid (str): 用户UID
 
         Returns:
-            bytes: 返回绘制结果
+            str: 返回绘制结果
         """
         img = BuildImage(
             background=g_pConfigManager.sResourcePath / "background/background.jpg"
@@ -108,7 +108,7 @@ class CFarmManager:
 
         # 左上角绘制用户信息
         # 头像
-        image = await g_pToolManager.get_user_avatar(uid, "qq")
+        image = await g_pToolManager.get_user_avatar(uid)
 
         if image:
             avatar = BuildImage(background=image)
@@ -170,7 +170,7 @@ class CFarmManager:
         else:
             await img.resize(0.4)
 
-        return img.pic2bytes()
+        return img.pic2base4()
 
     @classmethod
     async def drawDetailFarmByUid(cls, uid: str) -> list:

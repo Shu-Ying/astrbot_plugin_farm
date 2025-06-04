@@ -12,7 +12,7 @@ from ..cfg import g_pConfigManager
 
 class CSqlManager:
     def __init__(self):
-        dbPath = Path(g_pConfigManager.sDBFilePath)
+        dbPath = Path(g_pConfigManager.sDBPath)
         if dbPath and not dbPath.exists():
             os.makedirs(dbPath, exist_ok=True)
 
@@ -28,7 +28,7 @@ class CSqlManager:
             cls.m_pDB.row_factory = aiosqlite.Row
             return True
         except Exception as e:
-            logger.warning("初始化总数据库失败", e=e)
+            logger.warning(f"初始化总数据库失败{e}")
             return False
 
     @classmethod
@@ -131,7 +131,7 @@ class CSqlManager:
                 await cls.m_pDB.execute(command)
             return True
         except Exception as e:
-            logger.warning(f"数据库语句执行出错: {command}", e=e)
+            logger.warning(f"数据库语句执行出错: {command} {e}")
             return False
 
 

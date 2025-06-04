@@ -6,7 +6,12 @@
         "hint": "我的农场返回图片的清晰度, [low, medium, hight, original]",
         "default": "low"
     },
-
+    "sFarmPrefix": {
+        "description": "指令前缀",
+        "type": "string",
+        "hint": "防冲突",
+        "default": ""
+    },
     "FarmServerUrl": {
         "description": "服务地址",
         "type": "string",

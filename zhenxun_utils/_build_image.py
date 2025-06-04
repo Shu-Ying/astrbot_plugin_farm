@@ -494,6 +494,17 @@ class BuildImage:
         base64_str = base64.b64encode(buf.getvalue()).decode()
         return f"base64://{base64_str}"
 
+    def pic2base4(self) -> str:
+        """BuildImage 转 base64
+
+        返回:
+            str: base64
+        """
+        buf = BytesIO()
+        self.markImg.save(buf, format="PNG")
+        base64_str = base64.b64encode(buf.getvalue()).decode()
+        return base64_str
+
     def pic2bytes(self) -> bytes:
         """获取bytes
 

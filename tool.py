@@ -1,31 +1,18 @@
 import os
 from datetime import datetime
+from typing import AsyncGenerator, Any
 from zoneinfo import ZoneInfo
 
 from astrbot.api import logger
-from astrbot.api.event import MessageChain
-from astrbot.api.star import Context
 
 from .dbService import g_pDBService
 
 from .zhenxun_utils.http_utils import AsyncHttpx
+from astrbot.core.platform import AstrMessageEvent
+import astrbot.core.message.components as Comp
 
 
 class CToolManager:
-    @classmethod
-    async def isRegisteredByUid(cls, uid: str, uname: str) -> bool:
-        result = await g_pDBService.user.isUserExist(uid)
-
-        if not result:
-            message = MessageChain().message("Hello!").at(uname, uid)
-
-            await Context.send_message(
-                "尚未开通农场，快at我发送 开通农场 开通吧", message
-            )
-            return False
-
-        return True
-
     @classmethod
     def sanitize_username(cls, username: str, max_length: int = 15) -> str:
         """
