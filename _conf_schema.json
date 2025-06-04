@@ -1,0 +1,16 @@
+{
+    "FarmDrawQuality": {
+        "description": "绘制农场清晰度",
+        "type": "string",
+        "options": ["low", "medium", "hight", "original"],
+        "hint": "我的农场返回图片的清晰度, [low, medium, hight, original]",
+        "default": "low"
+    },
+
+    "FarmServerUrl": {
+        "description": "服务地址",
+        "type": "string",
+        "hint": "签到、交易行、活动等服务器地址",
+        "default": "http://diuse.work"
+    }
+}

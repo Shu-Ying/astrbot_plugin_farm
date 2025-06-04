@@ -1,0 +1,22 @@
+{
+    "version": 0.01,
+    "zhuShi":
+    [
+        "name: 名称",
+        "level: 等级",
+        "price: 单价",
+        "icon: 显示图片",
+        "sell: 是否可以上架交易行"
+    ],
+    "item":
+    {
+        "muBan":
+        {
+            "name": "木板",
+            "level": 0,
+            "price": 5000,
+            "icon": "Test",
+            "sell": true
+        }
+    }
+}
