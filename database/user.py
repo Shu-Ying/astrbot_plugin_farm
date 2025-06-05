@@ -451,11 +451,14 @@ class CUserDB(CSqlManager):
             return -1
 
     @classmethod
-    async def updateStealCountByUid(cls, uid: str, stealCount: int) -> bool:
+    async def updateStealCountByUid(
+        cls, uid: str, stealTime: str, stealCount: int
+    ) -> bool:
         """根据用户Uid更新剩余偷菜次数
 
         Args:
             uid (str): 用户Uid
+            stealTime (str): 偷菜日期
             stealCount (int): 新剩余偷菜次数
 
         Returns:
@@ -467,7 +470,8 @@ class CUserDB(CSqlManager):
         try:
             async with cls._transaction():
                 await cls.m_pDB.execute(
-                    "UPDATE user SET stealCount = ? WHERE uid = ?", (stealCount, uid)
+                    "UPDATE user SET stealTime = ?, stealCount = ? WHERE uid = ?",
+                    (stealTime, stealCount, uid),
                 )
             return True
         except Exception as e:

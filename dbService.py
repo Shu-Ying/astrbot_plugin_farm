@@ -1,6 +1,3 @@
-from typing import Optional
-
-
 class CDBService:
     @classmethod
     async def init(cls):
@@ -37,11 +34,12 @@ class CDBService:
         cls.userSign = CUserSignDB()
         await cls.userSign.initDB()
 
-        #迁移旧数据库
+        # 迁移旧数据库
         await cls.userSoil.migrateOldFarmData()
 
     @classmethod
     async def cleanup(cls):
         await cls.plant.cleanup()
+
 
 g_pDBService = CDBService()

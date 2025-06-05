@@ -6,8 +6,8 @@ from astrbot.api import logger
 
 class Signal:
     def __init__(self):
-        self._slots = [] #绑定的槽函数列表
-        self._onceSlots = [] #只触发一次的槽函数列表
+        self._slots = []  # 绑定的槽函数列表
+        self._onceSlots = []  # 只触发一次的槽函数列表
 
     def connect(self, slot, priority=0):
         if callable(slot) and not any(s[0] == slot for s in self._slots):
@@ -41,10 +41,8 @@ class Signal:
                 logger.warning(f"事件槽 {slot.__name__} 触发异常: {e}")
 
 
-
 class FarmEventManager:
     def __init__(self):
-
         self.m_beforePlant = Signal()
         """播种前信号
 
@@ -99,5 +97,6 @@ class FarmEventManager:
         self.m_afterExpand = Signal()
         self.m_beforeSteal = Signal()
         self.m_afterSteal = Signal()
+
 
 g_pEventManager = FarmEventManager()

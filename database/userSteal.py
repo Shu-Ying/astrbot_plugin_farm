@@ -7,17 +7,19 @@ class CUserStealDB(CSqlManager):
     @classmethod
     async def initDB(cls):
         userSteal = {
-            "uid": "TEXT NOT NULL",             #被偷用户Uid
-            "soilIndex": "INTEGER NOT NULL",    #被偷的地块索引 从1开始
-            "stealerUid": "TEXT NOT NULL",      #偷菜用户Uid
-            "stealCount": "INTEGER NOT NULL",   #被偷数量
-            "stealTime": "INTEGER NOT NULL",    #被偷时间
-            "PRIMARY KEY": "(uid, soilIndex, stealerUid)"
+            "uid": "TEXT NOT NULL",  # 被偷用户Uid
+            "soilIndex": "INTEGER NOT NULL",  # 被偷的地块索引 从1开始
+            "stealerUid": "TEXT NOT NULL",  # 偷菜用户Uid
+            "stealCount": "INTEGER NOT NULL",  # 被偷数量
+            "stealTime": "INTEGER NOT NULL",  # 被偷时间
+            "PRIMARY KEY": "(uid, soilIndex, stealerUid)",
         }
         await cls.ensureTableSchema("userSteal", userSteal)
 
     @classmethod
-    async def addStealRecord(cls, uid: str, soilIndex: int, stealerUid: str, stealCount: int, stealTime: int) -> bool:
+    async def addStealRecord(
+        cls, uid: str, soilIndex: int, stealerUid: str, stealCount: int, stealTime: int
+    ) -> bool:
         """添加偷菜记录
 
         Args:
@@ -34,7 +36,7 @@ class CUserStealDB(CSqlManager):
             async with cls._transaction():
                 await cls.m_pDB.execute(
                     'INSERT INTO "userSteal"(uid, soilIndex, stealerUid, stealCount, stealTime) VALUES(?, ?, ?, ?, ?);',
-                    (uid, soilIndex, stealerUid, stealCount, stealTime)
+                    (uid, soilIndex, stealerUid, stealCount, stealTime),
                 )
             return True
         except Exception as e:
@@ -55,7 +57,7 @@ class CUserStealDB(CSqlManager):
             async with cls._transaction():
                 cursor = await cls.m_pDB.execute(
                     'SELECT soilIndex, stealerUid, stealCount, stealTime FROM "userSteal" WHERE uid=?;',
-                    (uid,)
+                    (uid,),
                 )
                 rows = await cursor.fetchall()
             return [
@@ -64,7 +66,7 @@ class CUserStealDB(CSqlManager):
                     "soilIndex": row[0],
                     "stealerUid": row[1],
                     "stealCount": row[2],
-                    "stealTime": row[3]
+                    "stealTime": row[3],
                 }
                 for row in rows
             ]
@@ -87,7 +89,7 @@ class CUserStealDB(CSqlManager):
             async with cls._transaction():
                 cursor = await cls.m_pDB.execute(
                     'SELECT stealerUid, stealCount, stealTime FROM "userSteal" WHERE uid=? AND soilIndex=?;',
-                    (uid, soilIndex)
+                    (uid, soilIndex),
                 )
                 rows = await cursor.fetchall()
             return [
@@ -96,7 +98,7 @@ class CUserStealDB(CSqlManager):
                     "soilIndex": soilIndex,
                     "stealerUid": row[0],
                     "stealCount": row[1],
-                    "stealTime": row[2]
+                    "stealTime": row[2],
                 }
                 for row in rows
             ]
@@ -119,10 +121,10 @@ class CUserStealDB(CSqlManager):
             async with cls._transaction():
                 cursor = await cls.m_pDB.execute(
                     'SELECT SUM(stealCount) FROM "userSteal" WHERE uid=? AND soilIndex=?;',
-                    (uid, soilIndex)
+                    (uid, soilIndex),
                 )
                 row = await cursor.fetchone()
-            return row[0] or 0 # type: ignore
+            return row[0] or 0  # type: ignore
         except Exception as e:
             logger.warning("计算总偷菜数量失败", e=e)
             return 0
@@ -142,10 +144,10 @@ class CUserStealDB(CSqlManager):
             async with cls._transaction():
                 cursor = await cls.m_pDB.execute(
                     'SELECT COUNT(DISTINCT stealerUid) FROM "userSteal" WHERE uid=? AND soilIndex=?;',
-                    (uid, soilIndex)
+                    (uid, soilIndex),
                 )
                 row = await cursor.fetchone()
-            return row[0] or 0 # type: ignore
+            return row[0] or 0  # type: ignore
         except Exception as e:
             logger.warning("计算偷菜者数量失败", e=e)
             return 0
@@ -166,7 +168,7 @@ class CUserStealDB(CSqlManager):
             async with cls._transaction():
                 cursor = await cls.m_pDB.execute(
                     'SELECT 1 FROM "userSteal" WHERE uid=? AND soilIndex=? AND stealerUid=? LIMIT 1;',
-                    (uid, soilIndex, stealerUid)
+                    (uid, soilIndex, stealerUid),
                 )
                 row = await cursor.fetchone()
             return bool(row)
@@ -175,7 +177,9 @@ class CUserStealDB(CSqlManager):
             return False
 
     @classmethod
-    async def updateStealRecord(cls, uid: str, soilIndex: int, stealerUid: str, stealCount: int, stealTime: int) -> bool:
+    async def updateStealRecord(
+        cls, uid: str, soilIndex: int, stealerUid: str, stealCount: int, stealTime: int
+    ) -> bool:
         """更新偷菜记录的数量和时间
 
         Args:
@@ -192,7 +196,7 @@ class CUserStealDB(CSqlManager):
             async with cls._transaction():
                 await cls.m_pDB.execute(
                     'UPDATE "userSteal" SET stealCount=?, stealTime=? WHERE uid=? AND soilIndex=? AND stealerUid=?;',
-                    (stealCount, stealTime, uid, soilIndex, stealerUid)
+                    (stealCount, stealTime, uid, soilIndex, stealerUid),
                 )
             return True
         except Exception as e:
@@ -214,7 +218,7 @@ class CUserStealDB(CSqlManager):
             async with cls._transaction():
                 await cls.m_pDB.execute(
                     'DELETE FROM "userSteal" WHERE uid=? AND soilIndex=?;',
-                    (uid, soilIndex)
+                    (uid, soilIndex),
                 )
             return True
         except Exception as e:

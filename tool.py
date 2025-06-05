@@ -1,15 +1,11 @@
 import os
 from datetime import datetime
-from typing import AsyncGenerator, Any
 from zoneinfo import ZoneInfo
 
 from astrbot.api import logger
 
-from .dbService import g_pDBService
 
 from .zhenxun_utils.http_utils import AsyncHttpx
-from astrbot.core.platform import AstrMessageEvent
-import astrbot.core.message.components as Comp
 
 
 class CToolManager:

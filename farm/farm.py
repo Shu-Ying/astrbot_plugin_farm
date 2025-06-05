@@ -22,7 +22,7 @@ class CFarmManager:
             uid (str): 用户UID
 
         Returns:
-            str: 返回绘制结果
+            str: 返回绘制图片base64
         """
         img = BuildImage(
             background=g_pConfigManager.sResourcePath / "background/background.jpg"
@@ -170,7 +170,7 @@ class CFarmManager:
         else:
             await img.resize(0.4)
 
-        return img.pic2base4()
+        return img.pic2base64()
 
     @classmethod
     async def drawDetailFarmByUid(cls, uid: str) -> list:
@@ -178,7 +178,7 @@ class CFarmManager:
 
         farm = await cls.drawFarmByUid(uid)
 
-        info.append(BuildImage.open(farm))
+        info.append(farm)
 
         dataList = []
         columnName = [
@@ -251,7 +251,7 @@ class CFarmManager:
                         dataList,
                     )
 
-                    info.append(result.copy())
+                    info.append(result.pic2base64())
                     dataList.clear()
 
             if i >= soilNumber:
@@ -262,7 +262,7 @@ class CFarmManager:
                     dataList,
                 )
 
-                info.append(result.copy())
+                info.append(result.pic2base64())
                 dataList.clear()
 
         return info
@@ -350,7 +350,7 @@ class CFarmManager:
         return True, plant, False, offsetX, offsetY
 
     @classmethod
-    async def getUserSeedByUid(cls, uid: str) -> bytes:
+    async def getUserSeedByUid(cls, uid: str) -> str:
         """获取用户种子仓库"""
         dataList = []
         columnNames = [
@@ -374,7 +374,7 @@ class CFarmManager:
                 columnNames,
                 dataList,
             )
-            return result.pic2bytes()
+            return result.pic2base64()
 
         for seedName, count in seedRecords.items():
             try:
@@ -407,7 +407,7 @@ class CFarmManager:
             columnNames,
             dataList,
         )
-        return result.pic2bytes()
+        return result.pic2base64()
 
     @classmethod
     async def sowing(cls, uid: str, name: str, num: int = -1) -> str:
@@ -428,11 +428,15 @@ class CFarmManager:
                 count = 0  # 如果返回 None，则视为没有种子
 
             if count <= 0:
-                return f"没有在你的仓库发现{name}种子，快去买点吧！"
+                return g_pConfigManager.sTranslation["sowing"]["noSeed"].format(
+                    name=name
+                )
 
             # 如果播种数量超过仓库种子数量
             if count < num and num != -1:
-                return f"仓库中的{name}种子数量不足，当前剩余{count}个种子"
+                return g_pConfigManager.sTranslation["sowing"]["noNum"].format(
+                    name=name, num=count
+                )
 
             # 获取用户土地数量
             soilNumber = await g_pDBService.user.getUserSoilByUid(uid)
@@ -470,13 +474,17 @@ class CFarmManager:
 
             # 根据播种结果给出反馈
             if num == 0:
-                return f"播种{name}成功！仓库剩余{count}个种子"
+                return g_pConfigManager.sTranslation["sowing"]["success"].format(
+                    name=name, num=count
+                )
             else:
-                return f"播种数量超出开垦土地数量，已将可播种土地成功播种{name}！仓库剩余{count}个种子"
+                return g_pConfigManager.sTranslation["sowing"]["success2"].format(
+                    name=name, num=count
+                )
 
         except Exception as e:
             logger.warning("播种操作失败！", e=e)
-            return "播种失败，请稍后重试！"
+            return g_pConfigManager.sTranslation["sowing"]["error"]
 
     @classmethod
     async def harvest(cls, uid: str) -> str:
@@ -536,7 +544,11 @@ class CFarmManager:
                     experience += plantInfo["experience"]
 
                     harvestRecords.append(
-                        f"收获作物：{soilInfo['plantName']}，数量为：{number}，经验为：{plantInfo['experience']}"
+                        g_pConfigManager.sTranslation["harvest"]["append"].format(
+                            name=soilInfo["plantName"],
+                            num=number,
+                            exp=plantInfo["experience"],
+                        )
                     )
 
                     await g_pDBService.userPlant.addUserPlantByUid(
@@ -576,16 +588,20 @@ class CFarmManager:
             if experience > 0:
                 exp = await g_pDBService.user.getUserExpByUid(uid)
                 await g_pDBService.user.updateUserExpByUid(uid, exp + experience)
-                harvestRecords.append(f"\t累计获得经验：{experience}")
+                harvestRecords.append(
+                    g_pConfigManager.sTranslation["harvest"]["exp"].format(
+                        exp=experience,
+                    )
+                )
 
             if harvestCount <= 0:
-                return "没有可收获的作物哦~ 不要试图拔苗助长"
+                return g_pConfigManager.sTranslation["harvest"]["no"]
             else:
                 return "\n".join(harvestRecords)
 
         except Exception as e:
             logger.warning("收获操作失败！", e=e)
-            return "收获失败，请稍后重试！"
+            return g_pConfigManager.sTranslation["harvest"]["error"]
 
     @classmethod
     async def eradicate(cls, uid: str) -> str:
@@ -632,19 +648,21 @@ class CFarmManager:
             exp = await g_pDBService.user.getUserExpByUid(uid)
             await g_pDBService.user.updateUserExpByUid(uid, exp + experience)
 
-            return f"成功铲除荒废作物，累计获得经验：{experience}"
+            return g_pConfigManager.sTranslation["eradicate"]["success"].format(
+                exp=experience
+            )
         else:
-            return "没有可以铲除的作物"
+            return g_pConfigManager.sTranslation["eradicate"]["error"]
 
     @classmethod
-    async def getUserPlantByUid(cls, uid: str) -> bytes:
+    async def getUserPlantByUid(cls, uid: str) -> str:
         """获取用户作物仓库
 
         Args:
             uid (str): 用户Uid
 
         Returns:
-            bytes: 返回图片
+            str: 返回图片
         """
         data_list = []
         column_name = ["-", "作物名称", "数量", "单价", "总价", "是否可以上架交易行"]
@@ -658,7 +676,7 @@ class CFarmManager:
                 column_name,
                 data_list,
             )
-            return result.pic2bytes()
+            return result.pic2base64()
 
         sell = ""
         for name, count in plant.items():
@@ -687,7 +705,7 @@ class CFarmManager:
             data_list,
         )
 
-        return result.pic2bytes()
+        return result.pic2base64()
 
     @classmethod
     async def stealing(cls, uid: str, target: str) -> str:
@@ -717,7 +735,7 @@ class CFarmManager:
             stealCount = 5
 
         if stealCount <= 0:
-            return "你今天可偷次数到达上限啦，手下留情吧"
+            return g_pConfigManager.sTranslation["stealing"]["max"]
 
         # 获取用户解锁地块数量
         soilNumber = await g_pDBService.user.getUserSoilByUid(target)
@@ -751,6 +769,7 @@ class CFarmManager:
             if currentTime >= matureTime:
                 # 如果偷过，则跳过该土地
                 if await g_pDBService.userSteal.hasStealed(target, i, uid):
+                    isStealingNumber += 1
                     continue
 
                 stealingNumber = plantInfo[
@@ -765,7 +784,9 @@ class CFarmManager:
                     )
 
                     harvestRecords.append(
-                        f"成功偷到作物：{soilInfo['plantName']}，数量为：{randomNumber}"
+                        g_pConfigManager.sTranslation["stealing"]["info"].format(
+                            name=soilInfo["plantName"], num=randomNumber
+                        )
                     )
 
                     isStealingPlant += 1
@@ -816,13 +837,13 @@ class CFarmManager:
                         )
 
         if isStealingPlant <= 0 and isStealingNumber <= 0:
-            return "目标没有作物可以被偷"
+            return g_pConfigManager.sTranslation["stealing"]["noPlant"]
         elif isStealingPlant <= 0 and isStealingNumber > 0:
-            return "你已经偷过目标啦，请手下留情"
+            return g_pConfigManager.sTranslation["stealing"]["repeat"]
         else:
             stealCount -= 1
 
-            await g_pDBService.user.updateStealCountByUid(uid, stealCount)
+            await g_pDBService.user.updateStealCountByUid(uid, stealTime, stealCount)
 
             return "\n".join(harvestRecords)
 
@@ -833,7 +854,7 @@ class CFarmManager:
 
         try:
             if userInfo["soil"] >= 30:
-                return "你已经开垦了全部土地"
+                return g_pConfigManager.sTranslation["reclamation"]["perfect"]
 
             rec = rec[f"{userInfo['soil'] + 1}"]
 
@@ -843,13 +864,17 @@ class CFarmManager:
 
             str = ""
             if len(item) == 0:
-                str = f"下次开垦所需条件：等级：{level}，农场币：{point}"
+                str = g_pConfigManager.sTranslation["reclamation"]["next"].format(
+                    level=level, num=point
+                )
             else:
-                str = f"下次开垦所需条件：等级：{level}，农场币：{point}，物品：{item}"
+                str = g_pConfigManager.sTranslation["reclamation"]["next2"].format(
+                    level=level, num=point, item=item
+                )
 
             return str
         except Exception:
-            return "获取开垦土地条件失败！"
+            return g_pConfigManager.sTranslation["reclamation"]["error"]
 
     @classmethod
     async def reclamation(cls, uid: str) -> str:
@@ -860,7 +885,7 @@ class CFarmManager:
 
         try:
             if userInfo["soil"] >= 30:
-                return "你已经开垦了全部土地"
+                return g_pConfigManager.sTranslation["reclamation"]["perfect"]
 
             rec = rec[f"{userInfo['soil'] + 1}"]
 
@@ -868,18 +893,22 @@ class CFarmManager:
             point = rec["point"]
 
             if level[0] < levelFileter:
-                return f"当前用户等级{level[0]}，升级所需等级为{levelFileter}"
+                return g_pConfigManager.sTranslation["reclamation"]["nextLevel"].format(
+                    level=level[0], next=levelFileter
+                )
 
             if userInfo["point"] < point:
-                return f"当前用户农场币不足，升级所需农场币为{point}"
+                return g_pConfigManager.sTranslation["reclamation"]["noNum"].format(
+                    num=point
+                )
 
             # TODO 缺少判断消耗的item
             await g_pDBService.user.updateUserPointByUid(uid, userInfo["point"] - point)
             await g_pDBService.user.updateUserSoilByUid(uid, userInfo["soil"] + 1)
 
-            return "开垦土地成功！"
+            return g_pConfigManager.sTranslation["reclamation"]["success"]
         except Exception:
-            return "执行开垦失败！"
+            return g_pConfigManager.sTranslation["reclamation"]["error1"]
 
 
 g_pFarmManager = CFarmManager()

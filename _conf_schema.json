@@ -6,7 +6,7 @@
         "hint": "我的农场返回图片的清晰度, [low, medium, hight, original]",
         "default": "low"
     },
-    "sFarmPrefix": {
+    "FarmPrefix": {
         "description": "指令前缀",
         "type": "string",
         "hint": "防冲突",

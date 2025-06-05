@@ -494,7 +494,7 @@ class BuildImage:
         base64_str = base64.b64encode(buf.getvalue()).decode()
         return f"base64://{base64_str}"
 
-    def pic2base4(self) -> str:
+    def pic2base64(self) -> str:
         """BuildImage 转 base64
 
         返回:
