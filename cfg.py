@@ -15,7 +15,7 @@ class Config:
     bSignStatus = True
 
     # 是否处于Debug模式
-    bIsDebug = True
+    bIsDebug = False
 
     # 数据库文件目录
     sDBPath = (
