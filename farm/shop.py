@@ -100,7 +100,7 @@ class CShopManager:
             columnName,
             dataList,
         )
-        return result.pic2base4()
+        return result.pic2base64()
 
     @classmethod
     async def buySeed(cls, uid: str, name: str, num: int = 1) -> str:
