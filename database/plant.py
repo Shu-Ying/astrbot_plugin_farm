@@ -6,6 +6,7 @@ import aiosqlite
 from astrbot.api import logger
 
 from ..cfg import g_pConfigManager
+from ..request import g_pRequestManager
 
 
 class CPlantManager:
@@ -247,3 +248,45 @@ class CPlantManager:
         except Exception as e:
             logger.warning("查询所有作物失败", e=e)
             return []
+
+    @classmethod
+    async def downloadPlant(cls) -> bool:
+        """遍历所有作物，下载各阶段图片及icon文件到指定文件夹
+
+        Returns:
+            bool: 全部下载完成返回True，如有失败返回False
+        """
+        success = True
+        baseUrl = g_pConfigManager.sFarmServerUrl
+
+        baseUrl = baseUrl.rstrip("/") + ":8998/file"
+        try:
+            plants = await cls.listPlants()
+            for plant in plants:
+                name = plant["name"]
+                phaseCount = await cls.getPlantPhaseNumberByName(name)
+                saveDir = os.path.join(g_pConfigManager.sResourcePath, "plant", name)
+                begin = 0 if plant["general"] == 0 else 1
+
+                for idx in range(begin, phaseCount + 1):
+                    fileName = f"{idx}.png"
+                    fullPath = os.path.join(saveDir, fileName)
+
+                    if os.path.exists(fullPath):
+                        continue
+
+                    url = f"{baseUrl}/{name}/{idx}.png"
+                    if not await g_pRequestManager.download(url, saveDir, f"{idx}.png"):
+                        success = False
+
+                iconName = "icon.png"
+                iconPath = os.path.join(saveDir, iconName)
+                if not os.path.exists(iconPath):
+                    iconUrl = f"{baseUrl}/{name}/{iconName}"
+                    if not await g_pRequestManager.download(iconUrl, saveDir, iconName):
+                        success = False
+
+            return success
+        except Exception as e:
+            logger.warning(f"下载作物资源异常: {e}")
+            return False

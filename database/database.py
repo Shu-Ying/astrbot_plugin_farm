@@ -103,9 +103,14 @@ class CSqlManager:
             commonCols = [k for k in desired if k in existing]
             if commonCols:
                 colsStr = ", ".join(f'"{c}"' for c in commonCols)
-                await cls.m_pDB.execute(
-                    f'INSERT INTO "{tmpTable}" ({colsStr}) SELECT {colsStr} FROM "{tableName}";'
+
+                sql = (
+                    f'INSERT INTO "{tmpTable}" ({colsStr}) '
+                    f"SELECT {colsStr} "
+                    f'FROM "{tableName}";'
                 )
+
+                await cls.m_pDB.execute(sql)
             await cls.m_pDB.execute(f'DROP TABLE "{tableName}";')
             await cls.m_pDB.execute(
                 f'ALTER TABLE "{tmpTable}" RENAME TO "{tableName}";'

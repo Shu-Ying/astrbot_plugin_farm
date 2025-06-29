@@ -1,33 +1,31 @@
-from astrbot.api.event import AstrMessageEvent
-from astrbot.api.star import Context, Star, register
-from astrbot.api import logger
-from astrbot.api import AstrBotConfig
-from astrbot.core.star.filter.event_message_type import EventMessageType
-from astrbot.api.event import filter
-from astrbot.core import AstrBotConfig
-from astrbot.core.platform import AstrMessageEvent
-import astrbot.core.message.components as Comp
-from astrbot.core.utils.session_waiter import (
-    session_waiter,
-    SessionController,
-)
-from astrbot.api.message_components import Node, Image
-import inspect
 import asyncio
+import inspect
 import re
 from typing import List
 
-from . import cfg
+import astrbot.core.message.components as Comp
+from astrbot.api import AstrBotConfig, logger
+from astrbot.api.event import AstrMessageEvent, filter
+from astrbot.api.message_components import Image, Node
+from astrbot.api.star import Context, Star, register
+from astrbot.core import AstrBotConfig
+from astrbot.core.platform import AstrMessageEvent
+from astrbot.core.star.filter.event_message_type import EventMessageType
+from astrbot.core.utils.session_waiter import (
+    SessionController,
+    session_waiter,
+)
 
-from .dbService import g_pDBService
-from .json import g_pJsonManager
-from .farm.shop import g_pShopManager
-from .farm.farm import g_pFarmManager
+from . import cfg
 from .database.database import g_pSqlManager
+from .dbService import g_pDBService
+from .farm.farm import g_pFarmManager
+from .farm.shop import g_pShopManager
+from .json import g_pJsonManager
 from .tool import g_pToolManager
 
 
-@register("astrbot_plugin_farm", "真寻农场", "农场快乐时光", "1.4.0")
+@register("astrbot_plugin_farm", "真寻农场", "农场快乐时光", "1.5.0")
 class CAstrbotPluginFarm(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
@@ -55,6 +53,7 @@ class CAstrbotPluginFarm(Star):
             "更改农场名": self.changeName,
             "农场签到": self.signIn,
             "农场下阶段": self.god,
+            "土地升级": self.soilUpgrade,
         }
 
     async def initialize(self):
@@ -527,7 +526,7 @@ class CAstrbotPluginFarm(Star):
                 )
             except Exception as e:
                 yield event.plain_result(
-                    cfg.g_pConfigManager.sTranslation["reclamation"]["error2"].format(
+                    cfg.g_pConfigManager.sTranslation["reclamation"]["error1"].format(
                         e=e
                     )
                 )
@@ -756,6 +755,77 @@ class CAstrbotPluginFarm(Star):
         uid = event.get_sender_id()
 
         await g_pDBService.userSoil.nextPhase(uid, int(params[0]))
+
+    async def soilUpgrade(self, event: AstrMessageEvent, params: List[str]):
+        """土地升级"""
+        uid = event.get_sender_id()
+
+        if not params:
+            chain = [
+                Comp.At(qq=uid),
+                Comp.Plain(cfg.g_pConfigManager.sTranslation["soilInfo"]["noSoil"]),
+            ]
+
+            yield event.chain_result(chain)
+            return
+
+        exist = await g_pDBService.user.isUserExist(uid)
+        if not exist:
+            chain = [
+                Comp.At(qq=uid),
+                Comp.Plain(cfg.g_pConfigManager.sTranslation["basic"]["notFarm"]),
+            ]
+
+            yield event.chain_result(chain)
+            return
+
+        try:
+            soilIndex = int(params[0])
+            condition = await g_pFarmManager.soilUpgradeCondition(uid, soilIndex)
+
+            chain = [
+                Comp.At(qq=uid),
+                Comp.Plain(condition),
+            ]
+
+            yield event.chain_result(chain)
+
+            if not condition.startswith("将土地升级至："):
+                return
+
+            @session_waiter(timeout=60, record_history_chains=False)
+            async def check(controller: SessionController, event: AstrMessageEvent):
+                if not event.message_str == "是":
+                    controller.stop()
+                    return
+
+                res = await g_pFarmManager.soilUpgrade(uid, soilIndex)
+
+                message = event.make_result()
+                message.chain = [
+                    Comp.At(qq=uid),
+                    Comp.Plain(res),
+                ]
+                await event.send(message)
+
+                controller.stop()
+
+            try:
+                await check(event)
+            except TimeoutError as _:  # 当超时后，会话控制器会抛出 TimeoutError
+                yield event.plain_result(
+                    cfg.g_pConfigManager.sTranslation["soilInfo"]["timeOut"]
+                )
+            except Exception as e:
+                yield event.plain_result(
+                    cfg.g_pConfigManager.sTranslation["soilInfo"]["error"].format(e=e)
+                )
+            finally:
+                event.stop_event()
+        except Exception as e:
+            logger.error(
+                cfg.g_pConfigManager.sTranslation["soilInfo"]["error2"].format(e=e)
+            )
 
     async def terminate(self):
         """可选择实现异步的插件销毁方法，当插件被卸载/停用时会调用。"""

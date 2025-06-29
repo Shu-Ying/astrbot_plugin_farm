@@ -79,7 +79,11 @@ class CJsonManager:
 
             return False
         else:
-            return await self.initSign()
+            result = await self.initSign()
+
+            cfg.g_pConfigManager.bSignStatus = result
+
+            return result
 
     async def initSign(self) -> bool:
         try:

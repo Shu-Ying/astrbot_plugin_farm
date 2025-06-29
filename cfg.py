@@ -36,6 +36,9 @@ class Config:
     # 农场签到文件路径
     sSignInPath = sConfigPath / "sign_in.json"
 
+    # 土地等级上限
+    iSoilLevelMax = 3
+
     sTranslation = {
         "basic": {"notFarm": "尚未开通农场，快at我发送 开通农场 开通吧 🌱🚜"},
         "register": {
@@ -80,7 +83,7 @@ class Config:
             "noNum": "💰 当前用户农场币不足，升级所需农场币为{num} 💸",
             "success": "✅ 开垦土地成功！🌱",
             "error": "❌ 获取开垦土地条件失败！",
-            "error1": "❌ 执行开垦失败！",
+            "error1": "❌ 执行开垦失败！{e}",
             "error2": "❌ 未知错误{e}💥",
         },
         "sellPlant": {
@@ -111,6 +114,20 @@ class Config:
             "grandTotal2": "\n🌱 获得{name}种子 * {num} 🌟",
             "error": "❗️ 签到功能异常！",
             "error1": "❌ 签到失败！未知错误 💔",
+        },
+        "soilInfo": {
+            "noSoil": "✏️ 请在指令后跟需要升级的土地ID，可以通过【农场详述】查询",
+            "success": "土地成功升级至{name}，效果为：{text}",
+            "timeOut": "等待土地升级回复超时，请重试",
+            "error": "土地信息尚未查询到{e}",
+            "error1": "该土地已经升至满级啦~",
+            "error2": "未知错误{e}",
+            "red": "增产+10%",
+            "black": "增产+20% 时间-20%",
+            "gold": "增产+28% 经验+28% 时间-20%",
+            "amethyst": "增产+30% 经验+30% 时间-25% 幸运+1%",
+            "aquamarine": "增产+32% 经验+32% 时间-28% 幸运+1%",
+            "blackcrystal": "增产+32% 经验+40% 时间-28% 幸运+2%",
         },
     }
 
