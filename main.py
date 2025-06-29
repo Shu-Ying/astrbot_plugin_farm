@@ -22,6 +22,7 @@ from .dbService import g_pDBService
 from .farm.farm import g_pFarmManager
 from .farm.shop import g_pShopManager
 from .json import g_pJsonManager
+from .request import g_pRequestManager
 from .tool import g_pToolManager
 
 
@@ -65,6 +66,9 @@ class CAstrbotPluginFarm(Star):
         await g_pJsonManager.init()
 
         await g_pDBService.init()
+
+        # 检查作物文件是否缺失 or 更新
+        await g_pRequestManager.initPlantDBFile()
 
     @filter.event_message_type(EventMessageType.ALL)
     async def farmHandle(self, event: AstrMessageEvent):
