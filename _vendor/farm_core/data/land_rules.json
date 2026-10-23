@@ -1,0 +1,480 @@
+{
+  "initial_plot_count": 6,
+  "expansion": {
+    "rows": [
+      {
+        "ordinal": 7,
+        "required_level": 5,
+        "coin_cost": 10000
+      },
+      {
+        "ordinal": 8,
+        "required_level": 7,
+        "coin_cost": 20000
+      },
+      {
+        "ordinal": 9,
+        "required_level": 9,
+        "coin_cost": 30000
+      },
+      {
+        "ordinal": 10,
+        "required_level": 11,
+        "coin_cost": 50000
+      },
+      {
+        "ordinal": 11,
+        "required_level": 13,
+        "coin_cost": 70000
+      },
+      {
+        "ordinal": 12,
+        "required_level": 15,
+        "coin_cost": 90000
+      },
+      {
+        "ordinal": 13,
+        "required_level": 17,
+        "coin_cost": 120000
+      },
+      {
+        "ordinal": 14,
+        "required_level": 19,
+        "coin_cost": 150000
+      },
+      {
+        "ordinal": 15,
+        "required_level": 21,
+        "coin_cost": 180000
+      },
+      {
+        "ordinal": 16,
+        "required_level": 23,
+        "coin_cost": 230000
+      },
+      {
+        "ordinal": 17,
+        "required_level": 25,
+        "coin_cost": 300000
+      },
+      {
+        "ordinal": 18,
+        "required_level": 27,
+        "coin_cost": 500000
+      },
+      {
+        "ordinal": 19,
+        "required_level": 29,
+        "coin_cost": 850000
+      },
+      {
+        "ordinal": 20,
+        "required_level": 31,
+        "coin_cost": 1100000
+      },
+      {
+        "ordinal": 21,
+        "required_level": 33,
+        "coin_cost": 1300000
+      },
+      {
+        "ordinal": 22,
+        "required_level": 35,
+        "coin_cost": 1500000
+      },
+      {
+        "ordinal": 23,
+        "required_level": 37,
+        "coin_cost": 1700000
+      },
+      {
+        "ordinal": 24,
+        "required_level": 39,
+        "coin_cost": 2000000
+      }
+    ]
+  },
+  "upgrades": [
+    {
+      "land_type": "red",
+      "name": "红土地",
+      "from_land_type": "normal",
+      "rows": [
+        {
+          "ordinal": 1,
+          "required_level": 28,
+          "coin_cost": 200000
+        },
+        {
+          "ordinal": 2,
+          "required_level": 29,
+          "coin_cost": 220000
+        },
+        {
+          "ordinal": 3,
+          "required_level": 30,
+          "coin_cost": 240000
+        },
+        {
+          "ordinal": 4,
+          "required_level": 31,
+          "coin_cost": 260000
+        },
+        {
+          "ordinal": 5,
+          "required_level": 32,
+          "coin_cost": 290000
+        },
+        {
+          "ordinal": 6,
+          "required_level": 33,
+          "coin_cost": 320000
+        },
+        {
+          "ordinal": 7,
+          "required_level": 34,
+          "coin_cost": 350000
+        },
+        {
+          "ordinal": 8,
+          "required_level": 35,
+          "coin_cost": 380000
+        },
+        {
+          "ordinal": 9,
+          "required_level": 36,
+          "coin_cost": 410000
+        },
+        {
+          "ordinal": 10,
+          "required_level": 37,
+          "coin_cost": 440000
+        },
+        {
+          "ordinal": 11,
+          "required_level": 38,
+          "coin_cost": 480000
+        },
+        {
+          "ordinal": 12,
+          "required_level": 39,
+          "coin_cost": 520000
+        },
+        {
+          "ordinal": 13,
+          "required_level": 40,
+          "coin_cost": 560000
+        },
+        {
+          "ordinal": 14,
+          "required_level": 41,
+          "coin_cost": 600000
+        },
+        {
+          "ordinal": 15,
+          "required_level": 42,
+          "coin_cost": 650000
+        },
+        {
+          "ordinal": 16,
+          "required_level": 43,
+          "coin_cost": 700000
+        },
+        {
+          "ordinal": 17,
+          "required_level": 44,
+          "coin_cost": 770000
+        },
+        {
+          "ordinal": 18,
+          "required_level": 45,
+          "coin_cost": 900000
+        },
+        {
+          "ordinal": 19,
+          "required_level": 47,
+          "coin_cost": 1500000
+        },
+        {
+          "ordinal": 20,
+          "required_level": 49,
+          "coin_cost": 2000000
+        },
+        {
+          "ordinal": 21,
+          "required_level": 51,
+          "coin_cost": 3000000
+        },
+        {
+          "ordinal": 22,
+          "required_level": 53,
+          "coin_cost": 4000000
+        },
+        {
+          "ordinal": 23,
+          "required_level": 55,
+          "coin_cost": 5500000
+        },
+        {
+          "ordinal": 24,
+          "required_level": 57,
+          "coin_cost": 6800000
+        }
+      ]
+    },
+    {
+      "land_type": "black",
+      "name": "黑土地",
+      "from_land_type": "red",
+      "rows": [
+        {
+          "ordinal": 1,
+          "required_level": 40,
+          "coin_cost": 500000
+        },
+        {
+          "ordinal": 2,
+          "required_level": 41,
+          "coin_cost": 600000
+        },
+        {
+          "ordinal": 3,
+          "required_level": 42,
+          "coin_cost": 700000
+        },
+        {
+          "ordinal": 4,
+          "required_level": 43,
+          "coin_cost": 800000
+        },
+        {
+          "ordinal": 5,
+          "required_level": 44,
+          "coin_cost": 900000
+        },
+        {
+          "ordinal": 6,
+          "required_level": 45,
+          "coin_cost": 1000000
+        },
+        {
+          "ordinal": 7,
+          "required_level": 46,
+          "coin_cost": 2000000
+        },
+        {
+          "ordinal": 8,
+          "required_level": 47,
+          "coin_cost": 2200000
+        },
+        {
+          "ordinal": 9,
+          "required_level": 48,
+          "coin_cost": 2400000
+        },
+        {
+          "ordinal": 10,
+          "required_level": 49,
+          "coin_cost": 2600000
+        },
+        {
+          "ordinal": 11,
+          "required_level": 50,
+          "coin_cost": 2800000
+        },
+        {
+          "ordinal": 12,
+          "required_level": 51,
+          "coin_cost": 3000000
+        },
+        {
+          "ordinal": 13,
+          "required_level": 52,
+          "coin_cost": 4000000
+        },
+        {
+          "ordinal": 14,
+          "required_level": 53,
+          "coin_cost": 4200000
+        },
+        {
+          "ordinal": 15,
+          "required_level": 54,
+          "coin_cost": 4400000
+        },
+        {
+          "ordinal": 16,
+          "required_level": 55,
+          "coin_cost": 4600000
+        },
+        {
+          "ordinal": 17,
+          "required_level": 56,
+          "coin_cost": 4800000
+        },
+        {
+          "ordinal": 18,
+          "required_level": 57,
+          "coin_cost": 5000000
+        },
+        {
+          "ordinal": 19,
+          "required_level": 59,
+          "coin_cost": 6000000
+        },
+        {
+          "ordinal": 20,
+          "required_level": 61,
+          "coin_cost": 6200000
+        },
+        {
+          "ordinal": 21,
+          "required_level": 63,
+          "coin_cost": 6400000
+        },
+        {
+          "ordinal": 22,
+          "required_level": 65,
+          "coin_cost": 6600000
+        },
+        {
+          "ordinal": 23,
+          "required_level": 67,
+          "coin_cost": 6800000
+        },
+        {
+          "ordinal": 24,
+          "required_level": 69,
+          "coin_cost": 7000000
+        }
+      ]
+    },
+    {
+      "land_type": "gold",
+      "name": "金土地",
+      "from_land_type": "black",
+      "rows": [
+        {
+          "ordinal": 1,
+          "required_level": 58,
+          "coin_cost": 4000000
+        },
+        {
+          "ordinal": 2,
+          "required_level": 59,
+          "coin_cost": 4200000
+        },
+        {
+          "ordinal": 3,
+          "required_level": 60,
+          "coin_cost": 4400000
+        },
+        {
+          "ordinal": 4,
+          "required_level": 61,
+          "coin_cost": 4600000
+        },
+        {
+          "ordinal": 5,
+          "required_level": 62,
+          "coin_cost": 4800000
+        },
+        {
+          "ordinal": 6,
+          "required_level": 63,
+          "coin_cost": 5000000
+        },
+        {
+          "ordinal": 7,
+          "required_level": 64,
+          "coin_cost": 5200000
+        },
+        {
+          "ordinal": 8,
+          "required_level": 65,
+          "coin_cost": 5400000
+        },
+        {
+          "ordinal": 9,
+          "required_level": 66,
+          "coin_cost": 5600000
+        },
+        {
+          "ordinal": 10,
+          "required_level": 67,
+          "coin_cost": 5800000
+        },
+        {
+          "ordinal": 11,
+          "required_level": 68,
+          "coin_cost": 6000000
+        },
+        {
+          "ordinal": 12,
+          "required_level": 69,
+          "coin_cost": 6200000
+        },
+        {
+          "ordinal": 13,
+          "required_level": 70,
+          "coin_cost": 6600000
+        },
+        {
+          "ordinal": 14,
+          "required_level": 71,
+          "coin_cost": 7000000
+        },
+        {
+          "ordinal": 15,
+          "required_level": 72,
+          "coin_cost": 7400000
+        },
+        {
+          "ordinal": 16,
+          "required_level": 73,
+          "coin_cost": 7800000
+        },
+        {
+          "ordinal": 17,
+          "required_level": 74,
+          "coin_cost": 8200000
+        },
+        {
+          "ordinal": 18,
+          "required_level": 75,
+          "coin_cost": 8600000
+        },
+        {
+          "ordinal": 19,
+          "required_level": 77,
+          "coin_cost": 9500000
+        },
+        {
+          "ordinal": 20,
+          "required_level": 79,
+          "coin_cost": 10400000
+        },
+        {
+          "ordinal": 21,
+          "required_level": 81,
+          "coin_cost": 11300000
+        },
+        {
+          "ordinal": 22,
+          "required_level": 83,
+          "coin_cost": 12200000
+        },
+        {
+          "ordinal": 23,
+          "required_level": 85,
+          "coin_cost": 13100000
+        },
+        {
+          "ordinal": 24,
+          "required_level": 87,
+          "coin_cost": 14000000
+        }
+      ]
+    }
+  ]
+}

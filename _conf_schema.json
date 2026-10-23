@@ -1,21 +1,40 @@
 {
-    "FarmDrawQuality": {
-        "description": "绘制农场清晰度",
-        "type": "string",
-        "options": ["low", "medium", "hight", "original"],
-        "hint": "我的农场返回图片的清晰度, [low, medium, hight, original]",
-        "default": "low"
-    },
-    "FarmPrefix": {
-        "description": "指令前缀",
-        "type": "string",
-        "hint": "防冲突",
-        "default": ""
-    },
-    "FarmServerUrl": {
-        "description": "服务地址",
-        "type": "string",
-        "hint": "签到、交易行、活动等服务器地址",
-        "default": "http://diuse.work"
-    }
+  "resource_source": {
+    "description": "资源获取地址",
+    "type": "string",
+    "default": "Github",
+    "options": ["Github", "Gitea", "farm_service"],
+    "hint": "启动时校验本地素材SHA256，缺失或不符从所选地址下载；修改后重载。"
+  },
+  "farm_service_url": {
+    "description": "farm_service 地址",
+    "type": "string",
+    "default": "",
+    "hint": "始终独立配置，用于资源及后续活动服务；选择farm_service获取素材时必填HTTPS基础地址。"
+  },
+  "font_path": {
+    "description": "中文字体路径",
+    "type": "string",
+    "default": "",
+    "hint": "部署环境可访问的中文字体文件；留空时尝试系统字体，找不到则退回文字。"
+  },
+  "data_dir": {
+    "description": "农场数据目录",
+    "type": "string",
+    "default": "",
+    "hint": "留空使用data/plugin_data/astrbot_plugin_farm。修改后重载插件；不会自动搬迁数据。"
+  },
+  "image_format": {
+    "description": "图片格式",
+    "type": "string",
+    "default": "AUTO",
+    "options": ["AUTO", "JPEG", "PNG"],
+    "hint": "AUTO使用压缩JPEG；修改后重载插件。"
+  },
+  "image_quality": {
+    "description": "农场图片质量",
+    "type": "int",
+    "default": 75,
+    "hint": "整数1～95，下一次图片请求生效；仅我的农场允许高清，质量不低于85。PNG不受影响。"
+  }
 }

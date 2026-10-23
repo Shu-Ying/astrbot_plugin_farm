@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "version": "farm-assets-v1",
+  "sha256": "78d6e8e448fd5296b21d471b98ea7d58c81ef78a82b0e192a1ed041bb5fddad9",
+  "size_bytes": 21264561,
+  "sources": {
+    "github": "https://raw.githubusercontent.com/Shu-Ying/farm_service/main/assets/assets.zip",
+    "gitea": "https://gitea.diuse.work/Diuse/farm_service/raw/branch/main/assets/assets.zip",
+    "farm_service": "https://farm.example/v1/assets/78d6e8e448fd5296b21d471b98ea7d58c81ef78a82b0e192a1ed041bb5fddad9/assets.zip"
+  }
+}

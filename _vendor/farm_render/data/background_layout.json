@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "canvas": [3072, 1872],
+  "anchor": "full_canvas_bottom_center",
+  "buildings": [
+    {"name": "房屋", "sprite": "decorate_default_2.png", "rect": [1675.75, 158.36, 572.14, 630.64], "layer": "background", "basis": "prefab parent and image transforms"},
+    {"name": "矿洞", "sprite": "decorate_default_3.png", "rect": [1385.61, 256.06, 282.88, 282.88], "layer": "background", "basis": "prefab geometry and inferred runtime origin"},
+    {"name": "主题入口", "sprite": "decorate_default_4.png", "rect": [860.44, 423.68, 294.97, 249.07], "layer": "background", "basis": "prefab geometry and inferred runtime origin"},
+    {"name": "摊位", "sprite": "decorate_default_5.png", "rect": [514.20, 553.27, 298.97, 288.52], "layer": "background", "basis": "approved screenshot inverse projection"},
+    {"name": "狗窝", "sprite": "decorate_default_6.png", "rect": [277.95, 762.35, 305.25, 206.98], "layer": "background", "basis": "approved screenshot inverse projection"},
+    {"name": "码头", "sprite": "decorate_default_7.png", "rect": [1074.51, 1019.51, 355.42, 397.24], "layer": "foreground", "basis": "approved screenshot inverse projection"},
+    {"name": "邮箱", "sprite": "decorate_default_8.png", "rect": [790.18, 576.27, 104.54, 140.08], "layer": "background", "basis": "approved screenshot inverse projection"},
+    {"name": "加工坊标牌", "sprite": "decorate_default_9.png", "rect": [2347.77, 756.08, 269.70, 269.70], "layer": "background", "basis": "approved screenshot inverse projection"},
+    {"name": "稻草人标牌", "sprite": "decorate_default_10.png", "rect": [1120.51, 300.30, 238.34, 238.34], "layer": "background", "basis": "approved screenshot inverse projection"}
+  ]
+}
