@@ -6,8 +6,9 @@ from .domain import Plot, integer
 
 
 def season_duration(plot: Plot) -> int:
-    return (plot.plant.growth_seconds if plot.harvest_count == 0
+    base = (plot.plant.growth_seconds if plot.harvest_count == 0
             else plot.plant.regrowth_seconds)
+    return max(1, (base * (80 if plot.land_level >= 2 else 100) + 99) // 100)
 
 
 def spawn_interval(plot: Plot) -> int:

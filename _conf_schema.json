@@ -1,4 +1,10 @@
 {
+  "data_dir": {
+    "description": "兼容旧部署的数据目录",
+    "type": "string",
+    "default": "",
+    "hint": "保留原有自定义目录以继续读取旧存档；留空使用 AstrBot 默认目录。修改此项不会自动搬移数据库。"
+  },
   "resource_source": {
     "description": "资源获取地址",
     "type": "string",
@@ -11,18 +17,6 @@
     "type": "string",
     "default": "",
     "hint": "始终独立配置，用于资源及后续活动服务；选择farm_service获取素材时必填HTTPS基础地址。"
-  },
-  "font_path": {
-    "description": "中文字体路径",
-    "type": "string",
-    "default": "",
-    "hint": "部署环境可访问的中文字体文件；留空时尝试系统字体，找不到则退回文字。"
-  },
-  "data_dir": {
-    "description": "农场数据目录",
-    "type": "string",
-    "default": "",
-    "hint": "留空使用data/plugin_data/astrbot_plugin_farm。修改后重载插件；不会自动搬迁数据。"
   },
   "image_format": {
     "description": "图片格式",

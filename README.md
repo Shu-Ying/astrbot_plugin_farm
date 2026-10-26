@@ -1,124 +1,106 @@
+<div align="center">
+
+# 真寻农场(zhenxun_plugin_farm)
+
+<img src="./logo.png" width="400" alt="真寻农场 Logo">
+
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Shu-Ying/astrbot_plugin_farm/main/logo-readme.png" width="400" alt="真寻农场 Logo">
+    <a href="./LICENSE">
+        <img src="https://img.shields.io/badge/license-GPL3.0-FE7D37" alt="license">
+    </a>
+    <a href="https://www.python.org">
+        <img src="https://img.shields.io/badge/Python-3.10%2B-blue" alt="Python">
+    </a>
+    <a href="https://github.com/astral-sh/ruff">
+        <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json" alt="ruff">
+    </a>
 </p>
 
-# 农场 · AstrBot
+<p align="center">
 
-开通自己的农场，购买种子、播种、收获、管理仓库，与群友一起偷菜、开垦土地。
-农场图片、商店、仓库和帮助菜单均可在聊天中查看，存档保存在本地。
+[![tencent-qq](https://img.shields.io/badge/%E7%BE%A4-%E7%9C%9F%E5%AF%BB%E5%86%9C%E5%9C%BA%E6%B5%8B%E8%AF%95-%23FF99CC
+)](https://qm.qq.com/q/7hsOD4rOw2)
 
-![农场预览](https://raw.githubusercontent.com/Shu-Ying/astrbot_plugin_farm/main/images/farm-preview.png)
+</p>
 
-## 安装与快速开始
+你是说可以种地对吧🤔?
 
-在 AstrBot 插件市场搜索 `astrbot_plugin_farm`，或在插件管理中选择
-「从文件安装」，上传作者提供的完整插件 ZIP。不要只上传 `main.py`。
+</div>
 
-安装依赖后重载插件。按你配置的唤醒前缀发送指令，下面以 `/` 为例：
+---
+## 目录
+- [真寻农场(zhenxun\_plugin\_farm)](#真寻农场zhenxun_plugin_farm)
+  - [目录](#目录)
+  - [农场界面](#农场界面)
+  - [如何安装](#如何安装)
+  - [农场帮助](#农场帮助)
+  - [待办事宜 `Todo` 列表](#待办事宜-todo-列表)
+  - [关于](#关于)
+  - [致谢](#致谢)
+  - [许可证](#许可证)
+  - [上游仓库](#上游仓库)
 
-1. `/开通农场`：创建农场，获得初始6块土地。
-2. `/种子商店`：查看种子名称、编号与价格。
-3. `/购买种子 白萝卜 1`，然后 `/播种 白萝卜 1`。
-4. `/我的农场` 查看状态，生长期间用 `/农场除虫` 清除虫害。
-5. 成熟后 `/收获`，用 `/我的作物` 查看库存，或 `/出售作物` 出售。
+---
 
-发送 `/农场帮助` 查看当前版本自动生成的图片菜单；
-发送 `/农场帮助 文字` 查看文字版。仅 `/我的农场 高清` 支持高清。
+## 农场界面
 
-## 指令
+![农场界面](./images/farm-preview.png)
 
-`[参数]` 表示可选。作物支持名称或 `#编号`；同名作物请使用编号。
-仓库默认图片，例如 `/我的种子 2 文字`。偷菜目标必须通过消息中的 @ 指定。
+---
 
-| 分类 | 指令 | 说明 |
-| --- | --- | --- |
-| 开通与查看 | `/开通农场 [名称]` | 首次开通获得6块土地，可指定农场名称。 |
-| 开通与查看 | `/我的农场 [高清]` | 查看农场全景；仅我的农场支持高清。 |
-| 开通与查看 | `/农场详述 [页码]` | 查看各地块的作物、生长和虫害信息。 |
-| 开通与查看 | `/地块编号` | 查看已开垦土地编号及待开垦位置。 |
-| 开通与查看 | `/我的农场币` | 查看农场币、点券等资产。 |
-| 开通与查看 | `/我的点券` | 查看点券等资产。 |
-| 种子与种植 | `/种子商店 [页码]` | 查看种子价格、等级要求与作物编号。 |
-| 种子与种植 | `/购买种子 作物 数量` | 购买指定数量的种子。 |
-| 种子与种植 | `/播种 作物 [数量]` | 使用库存种子播种到空地。 |
-| 田间管理与扩建 | `/收获` | 收获成熟作物，获得作物与经验。 |
-| 田间管理与扩建 | `/农场除虫` | 清除虫害；生长期间及时除虫。 别名：除虫。 |
-| 田间管理与扩建 | `/铲除` | 清理枯萎作物，腾出土地。 |
-| 田间管理与扩建 | `/开垦` | 满足等级和费用后，新增1块普通空地。 |
-| 田间管理与扩建 | `/开垦 条件` | 查询下一块土地的等级及费用。 |
-| 仓库与出售 | `/我的种子 [页码] [文字]` | 查看种子库存；默认图片，追加「文字」切换。 |
-| 仓库与出售 | `/我的作物 [页码] [文字]` | 查看作物库存；默认图片，追加「文字」切换。 |
-| 仓库与出售 | `/出售作物 [作物] [数量]` | 出售作物获得农场币；省略作物时出售全部未锁定作物。 |
-| 仓库与出售 | `/作物加锁 作物` | 锁定作物，出售时自动跳过。 |
-| 仓库与出售 | `/作物解锁 作物` | 解除指定作物的锁定。 |
-| 好友互动 | `/偷菜 @目标` | 每日最多5次成功偷取，北京时间零点重置。 |
-| 使用帮助 | `/农场帮助 [文字]` | 查看当前平台菜单；追加「文字」查看文字版。 |
+## 如何安装
 
-## 配置
+方法一（推荐）：在小真寻后台的插件商店下载即可<br>
+方法二：下载源码放在小真寻`plugin`目录下
 
-| 配置项 | 默认值 | 说明 |
-| --- | --- | --- |
-| `font_path` | 空 | 中文字体路径；留空尝试系统字体，无可用字体时退回文字 |
-| `data_dir` | 空 | 留空使用 `data/plugin_data/astrbot_plugin_farm`；更改不会自动搬迁存档 |
-| `image_format` | `AUTO` | `AUTO` 为 JPEG；也可选 `JPEG` 或 `PNG` |
-| `image_quality` | `75` | 整数1～95，下一次图片请求生效；PNG不受影响 |
-| `resource_source`（资源获取地址） | `Github` | `Github`、`Gitea`、`farm_service`，重载生效 |
-| `farm_service_url`（farm_service 地址） | 空 | 独立HTTPS基础地址，供资源及后续活动服务共用；选farm_service下载时必填 |
+---
 
-除图片质量外，配置变更后请重载插件。高清农场的图片质量不低于85。
-依赖 Pillow 和 aiohttp，由插件依赖声明安装；插件不捆绑中文字体。
-当前重点适配 QQ/OneBot（`aiocqhttp`），其他平台尚未完成真实环境验证。
+## 农场帮助
+![农场帮助](./images/help-astrbot.png)
 
-插件不携带大型`assets.zip`。启动时校验数据目录下缓存素材的SHA256，
-缺失或不匹配时从所选源下载并校验后原子替换；GitHub/Gitea均从
-`farm_service`仓库根目录`assets/`获取。默认Github，不自动跨源切换；
-下载失败保留文字功能，调整来源后重载重试。两项配置始终同时存在，
-活动功能尚未实现。已有正确缓存时不联网。
+---
 
-离线部署可将服务仓库的`assets/assets.zip`放到农场数据目录
-`assets/<SHA256>/assets.zip`；SHA见插件的`_vendor/farm_render/data/asset-manifest.json`。
-请先提交/发布服务仓库的素材，再发布依赖它的插件；不要把素材ZIP放回插件仓库。
+## 待办事宜 `Todo` 列表
 
-## 玩法与旧账号兼容
+- [x] 完善我的农场图片，例如左上角显示用户数据
+- [ ] 完善升级数据、作物数据、作物图片
+- [x] 签到功能
+- [x] 在线更新作物信息
+- [ ] 添加渔场功能
+- [ ] 增加活动、交易行功能
+- [ ] 增加交易行总行功能
+- [ ] 添加其他游戏种子素材
+- [ ] 想不到了，想到再说
 
-- 新账号初始6块土地。`/开垦 条件` 查询下一块地的等级和费用，
-  `/开垦` 每次购买1块普通空地；未配置的地块不会扣款或放行。
-- 可靠识别为初始3块地的旧账号，一次性追加3块普通空地，保留已有开垦成果、
-  作物、加成与资产。来源不明、编号异常或补后超过当前30个显示位置时，
-  保留原状并提示管理员处理，不截断、不折现。
-- 新播种及下一季每半个基础生长周期生虫一次，间隔至少2小时。
-  已排定的旧生虫事件仍按原计划执行一次。
-- 每只虫降低生长速度5%；成熟时每只虫使本季减产5%。成熟后除虫无法恢复
-  本季减产，请在生长期间及时除虫。
-- 每日最多5次成功偷菜，北京时间零点重置；无可偷作物不消耗成功次数。
-- 出售时自动跳过已锁定作物。仓库可使用作物编号操作。
+---
 
-## 升级与数据备份
+## 关于
 
-升级前备份 `data/plugin_data/astrbot_plugin_farm`；若自定义 `data_dir`，
-请备份实际目录。数据库为 `farm.sqlite3`，日志为 `farm-preview.log`。
-旧库迁移前建议先在副本中验证。更换机器人、平台实例或部署不会自动合并账号。
+本人毫无任何Python经验，也从未正式的、系统的、完整的去学习Python。如有看到写的不对的地方，欢迎指出，也欢迎任何人一起来开发、完善农场。
 
-新版当前没有签到、改名、土地升级、点券商店、外部金币兑换及旧远程服务功能。
-请以当前帮助菜单为准，不要套用旧1.x版本指令。缺少稳定消息ID时，
-插件会拒绝写操作以避免重复扣款。离线包校验及模拟宿主测试不代表线上验证。
+素材来均源于互联网，侵权请联系我删除
 
-QQ/OneBot 图片查询会请求发送者的腾讯头像用于农场及详情图片；
-请求失败使用默认头像，成功缓存5分钟、失败缓存30秒，最多缓存16项。
-其他平台使用默认头像。存档按部署、平台实例、机器人及用户隔离。
+---
 
-## 更新日志与反馈
+## 致谢
 
-- [更新日志](https://github.com/Shu-Ying/astrbot_plugin_farm/blob/main/CHANGELOG.md)
-- [反馈问题](https://github.com/Shu-Ying/astrbot_plugin_farm/issues)
-- [插件商店](https://cloud.astrbot.app/plugin/Shu-Ying/astrbot_plugin_farm)
+最后感谢以下框架/作者的提供的技术支持(排名不分先后):
 
-代码许可见插件所附 LICENSE。角色图标为非官方二次创作，不表示获得官方授权；
-角色与原作相关权利不因代码许可证而转移。
+- [QQ农场](https://qqnc.qq.com/) *绝大多数的素材来源*
+- [小赖字体](https://github.com/lxgw/kose-font) *lxgw 提供的开源中文手写字体，采用 SIL OFL 1.1，随包附带完整字体许可*
+- [Nonebot2](https://github.com/nonebot/nonebot2) *✨ 跨平台 Python 异步机器人框架 ✨*
+- [zhenxun_bot](https://github.com/zhenxun-org/zhenxun_bot) *最爱真寻的一集*
+- [HibiKier](https://github.com/HibiKier) *阿咪为什么是神*
+- [ATTomato](https://github.com/ATTomatoo) *流泪偷码头.jpg*
+- [ChatGPT](https://chatgpt.com/) *AI神力*
 
-## 开发者本地构建
+## 许可证
 
-开发源为 Farm 主仓库。Windows 双击 `build_astrbot.cmd`，或运行
-`python scripts/build_plugin.py astrbot`，构建后生成完整 ZIP 和校验文件。
-每次使用独立输出目录，不安装或启动机器人、不自动推送远端。
-版本来自 `version.txt`；命令表、元数据与展示文件由构建生成。
+`真寻农场(zhenxun_plugin_farm)`将采用的是`GPLv3`许可证进行开源
+
+默认使用的小赖字体由 farm_service 分发，单独遵循 `SIL OFL 1.1`，完整版权声明与许可见
+[OFL-Xiaolai.txt](./_vendor/farm_render/data/OFL-Xiaolai.txt)。
+
+## 上游仓库
+
+- [main_plugin_farm](https://github.com/Shu-Ying/main_plugin_farm)

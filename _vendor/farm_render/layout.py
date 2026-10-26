@@ -1,9 +1,10 @@
 """从一次快照与统一时间构造可缓存场景；不访问存储。"""
 
 import hashlib
+from dataclasses import replace
 
 from ..farm_core.domain import Identity, Snapshot, integer
-from ..farm_core.pests import advance_plot
+from ..farm_core.pests import advance_plot, season_duration
 
 from .models import PlotView, Scene
 
@@ -53,8 +54,7 @@ def scene_from_snapshot(identity, snapshot, now, metadata):
             ))
             continue
         phases = tuple(dict.fromkeys(int(p) for p in info["phase"].split(",")))
-        duration = (plot.plant.growth_seconds if plot.harvest_count == 0
-                    else plot.plant.regrowth_seconds)
+        duration = season_duration(plot)
         elapsed = max(0, now - (plot.mature_at - duration))
         work = (elapsed * 100 if plot.growth_remaining is None else
                 duration * 100 - plot.growth_remaining)
@@ -72,5 +72,10 @@ def scene_from_snapshot(identity, snapshot, now, metadata):
             pest_frames=frames,
         ))
     return Scene(
-        scope, snapshot.account, tuple(views),
+        scope, snapshot.account, tuple(
+            replace(view, land_level=plot.land_level)
+            for view, plot in zip(views, sorted(
+                snapshot.plots, key=lambda p: p.slot,
+            ))
+        ),
     )

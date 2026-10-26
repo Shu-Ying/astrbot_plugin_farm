@@ -16,7 +16,7 @@ from .catalogue import Catalogue
 
 LOGGER = logging.getLogger(__name__)
 APPLICATION_ID = 0x4641524D
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 PEST_COLUMNS = {
     "pest_count": (
@@ -73,6 +73,7 @@ SCHEMA = (
         yield_bonus INTEGER NOT NULL DEFAULT 0,
         experience_bonus INTEGER NOT NULL DEFAULT 0,
         stolen_count INTEGER NOT NULL DEFAULT 0 CHECK(stolen_count>=0),
+        land_level INTEGER NOT NULL DEFAULT 0 CHECK(land_level BETWEEN 0 AND 3),
         """ + ",\n        ".join(
             f"{name} {definition}" for name, definition in PEST_COLUMNS.items()
         ) + """,
@@ -250,6 +251,38 @@ class SQLiteStore:
                     ))
                     connection.execute('PRAGMA user_version=4')
                     LOGGER.info('farm schema migrated version=4 theft=enabled')
+                    version = 4
+                if app == APPLICATION_ID and version == 4:
+                    self._validate(connection, expected_version=4)
+                    connection.execute(
+                        'ALTER TABLE plots ADD COLUMN land_level '
+                        'INTEGER NOT NULL DEFAULT 0 '
+                        'CHECK(land_level BETWEEN 0 AND 3)'
+                    )
+                    # 从已保留的迁移原始记录恢复等级，不按收益加成猜测。
+                    for row in connection.execute(
+                        "SELECT identity, result FROM operations "
+                        "WHERE action='legacy_import'"
+                    ).fetchall():
+                        try:
+                            archive = json.loads(row['result'])
+                            soils = archive['legacy_rows'].get('userSoil', [])
+                            for soil in soils:
+                                level = soil['soilLevel']
+                                slot = soil['soilIndex']
+                                if (type(level) is not int
+                                        or not 0 <= level <= 3
+                                        or type(slot) is not int or slot < 1):
+                                    raise ValueError('Invalid legacy soil')
+                                connection.execute(
+                                    'UPDATE plots SET land_level=? '
+                                    'WHERE identity=? AND slot=?',
+                                    (level, row['identity'], slot),
+                                )
+                        except (KeyError, TypeError, ValueError) as error:
+                            raise SchemaError('legacy_land_invalid') from error
+                    connection.execute('PRAGMA user_version=5')
+                    LOGGER.info('farm schema migrated version=5 land=enabled')
                 self._validate(connection)
                 connection.commit()
                 if migrated_rows is not None:

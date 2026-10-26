@@ -133,8 +133,9 @@ class FarmRenderer:
             )
 
     def _base(self, scene, options):
-        slots = frozenset(p.slot for p in scene.plots)
-        key = ("base", options.theme, options.width, slots)
+        slots = {p.slot: p.land_level for p in scene.plots}
+        key = ("base", options.theme, options.width,
+               tuple(sorted(slots.items())))
         cached = self.assets.cache.get(key)
         if cached is not None:
             return Canvas(cached.copy())
@@ -149,14 +150,14 @@ class FarmRenderer:
         soil_size = tuple(max(1, s(n)) for n in (
             self.assets.metadata["soil_size"]
         ))
-        tiles = {
-            True: self.assets.image("soil/普通土地.png", soil_size),
-            False: self.assets.image("soil/草土地.png", soil_size),
-        }
+        names = ('普通土地', '红土地', '黑土地', '金土地')
+        tiles = {level: self.assets.image(f'soil/{names[level]}.png', soil_size)
+                 for level in set(slots.values())}
+        grass = self.assets.image('soil/草土地.png', soil_size)
         expansion = False
         for slot, pos in enumerate(self.assets.metadata["positions"], 1):
             xy = (s(pos["x"]), s(pos["y"]))
-            canvas.paste(tiles[slot in slots], xy)
+            canvas.paste(tiles[slots[slot]] if slot in slots else grass, xy)
             if slot not in slots and not expansion:
                 icon = self.assets.image(
                     "background/expansion.png", (max(1, s(90)),) * 2,

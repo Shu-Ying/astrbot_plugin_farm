@@ -13,6 +13,7 @@ from .ports import Store
 from .pests import advance_plot, start_growth
 from .yield_rules import season_yield, remaining_yield
 from .land import COMPENSATION_ID, SUPPORTED_PLOTS, next_rule, owned_count
+from .land import LAND_NAMES, upgrade_rule
 
 
 LOGGER = logging.getLogger(__name__)
@@ -114,6 +115,48 @@ class FarmService:
 
         return await self._execute(identity, operation_id, 'reclaim', {},
                                    operation)
+
+    async def upgrade_conditions(self, identity: Identity, slot: int):
+        snapshot = await self.snapshot(identity)
+        plot, level, rule = upgrade_rule(snapshot.plots, slot)
+        return {
+            'slot': slot, 'land_name': LAND_NAMES[level],
+            'current_land': LAND_NAMES[plot.land_level],
+            'ordinal': rule.ordinal, 'required_level': rule.required_level,
+            'coin_cost': rule.coin_cost, 'level': snapshot.account.level,
+            'point': snapshot.account.point,
+        }
+
+    async def upgrade(self, identity: Identity, slot: int, operation_id: str):
+        integer(slot, 1, SUPPORTED_PLOTS)
+
+        def operation(repository, now):
+            account = repository.account()
+            plot, level, rule = upgrade_rule(repository.plots(), slot)
+            if account.level < rule.required_level:
+                raise FarmError('level_required')
+            repository.asset(Asset.POINT, -rule.coin_cost)
+            plot = advance_plot(plot, now)
+            matured = (plot.plant is not None and not plot.withered
+                       and plot.mature_at is not None and plot.mature_at > now)
+            if matured:
+                plot = replace(
+                    plot, mature_at=now, growth_remaining=0,
+                    growth_updated_at=now, next_pest_at=None,
+                    maturity_pests=plot.pest_count,
+                )
+            repository.save_plot(replace(
+                plot, land_level=level, yield_bonus=(0, 10, 20, 28)[level],
+                experience_bonus=28 if level == 3 else 0,
+            ))
+            return self._result(
+                repository, slot=slot, land_level=level,
+                land_name=LAND_NAMES[level], cost=rule.coin_cost,
+                ordinal=rule.ordinal, matured=matured,
+            )
+
+        return await self._execute(identity, operation_id, 'upgrade',
+                                   {'slot': slot}, operation)
 
     async def register(
         self, identity: Identity, name: str, operation_id: str,

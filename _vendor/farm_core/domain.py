@@ -214,8 +214,10 @@ class Plot:
     next_pest_at: int | None = None  # 下一次生虫时间，最多每季三次。
     maturity_pests: int = 0  # 成熟瞬间冻结的虫数，决定本季减产。
     stolen_count: int = 0  # 本季已被偷走数量；收获或铲除后归零。
+    land_level: int = 0  # 0普通、1红、2黑、3金；独立于作物生命周期。
 
     def __post_init__(self):
+        integer(self.land_level, 0, 3)
         integer(self.stolen_count)
         integer(self.pest_count, 0, 3)
         integer(self.pest_spawned, self.pest_count, 3)

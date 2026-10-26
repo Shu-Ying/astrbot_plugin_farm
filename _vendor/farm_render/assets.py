@@ -50,13 +50,18 @@ class Assets:
                         else data.joinpath('assets.zip'))
 
     def image(self, name, size=None):
-        if name not in self.metadata["images"]:
+        upgrade = name in ('soil/红土地.png', 'soil/黑土地.png', 'soil/金土地.png')
+        if not upgrade and name not in self.metadata["images"]:
             raise KeyError("Unknown packaged image")
-        size = tuple(size or self.metadata["images"][name]["size"])
+        size = tuple(size or (self.metadata['soil_size'] if upgrade
+                              else self.metadata["images"][name]["size"]))
         key = (name, size)
         cached = self.cache.get(key)
         if cached is None:
-            with self._bundle.open("rb") as stream, ZipFile(stream) as bundle:
+            source = (resources.files(__package__).joinpath(
+                'data', 'land-soils.zip',
+            ) if upgrade else self._bundle)
+            with source.open("rb") as stream, ZipFile(stream) as bundle:
                 content = bundle.read(name)
             with Image.open(BytesIO(content)) as original:
                 original.thumbnail(size, Image.Resampling.LANCZOS)

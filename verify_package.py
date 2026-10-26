@@ -43,7 +43,9 @@ def verify_files(files):
                 'images/farm-preview.png',
                 'requirements.txt', 'LICENSE', 'version.txt', '_version.py',
                 '_vendor/farm_core/__init__.py',
-                '_vendor/farm_render/data/asset-manifest.json'}
+                '_vendor/farm_render/data/asset-manifest.json',
+                '_vendor/farm_render/data/font-manifest.json',
+                '_vendor/farm_render/data/OFL-Xiaolai.txt'}
     if any(name.endswith('/assets.zip') for name in files):
         raise ValueError('Resource ZIP must not be in plugin repository')
     if not required <= set(files):

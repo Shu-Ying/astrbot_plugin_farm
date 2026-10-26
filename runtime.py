@@ -7,6 +7,8 @@ import json
 import logging
 from pathlib import Path
 import shlex
+from urllib.error import HTTPError, URLError
+from zipfile import BadZipFile
 
 from ._vendor.farm_core import Catalogue, FarmService, Identity, SQLiteStore
 from ._vendor.farm_core.domain import FarmError
@@ -20,6 +22,7 @@ from ._vendor.farm_core.presentation import (
 from ._vendor.farm_render import FarmRenderer, RenderOptions, RenderService
 from ._vendor.farm_render.seasons import season_for
 from ._vendor.farm_render.bundle import ensure_assets, validate_options
+from ._vendor.farm_render.font_bundle import ensure_font
 from ._vendor.farm_render.shop import shop_page
 from ._vendor.farm_render.details import detail_rows, details_text
 from ._vendor.farm_render.warehouse import (
@@ -29,7 +32,36 @@ from ._vendor.farm_render.warehouse import (
 logger = logging.getLogger(__name__)
 COMMANDS = command_map('zhenxun')
 HELP = help_text(command_specs('zhenxun'))
+
+
+def resource_failure_reason(error):
+    """只返回固定分类，不输出可能含 URL 或凭据的异常正文。"""
+    if isinstance(error, HTTPError):
+        return f'http_{error.code}'
+    if isinstance(error, TimeoutError):
+        return 'timeout'
+    if isinstance(error, URLError):
+        return ('timeout' if isinstance(error.reason, TimeoutError)
+                else 'network_error')
+    if isinstance(error, BadZipFile):
+        return 'invalid_archive'
+    if isinstance(error, ValueError):
+        known = {
+            'Resource SHA256 mismatch': 'integrity_mismatch',
+            'Resource size mismatch': 'integrity_mismatch',
+            'Font archive size or SHA256 mismatch': 'integrity_mismatch',
+            'Font member SHA256 mismatch': 'integrity_mismatch',
+            'Resource download limit or timeout': 'download_limit_or_timeout',
+        }
+        return known.get(str(error), 'validation_error')
+    if isinstance(error, OSError):
+        return 'io_error'
+    return 'unexpected_error'
+
+
 ERRORS = {
+    'land_max_level': '该地块已是金土地，当前不支持继续升级。',
+    'unknown_plot': '地块不存在，请发送「地块编号」查询已开垦土地。',
     'land_origin_unknown': '农场初始土地来源无法确认，未补地或扣币，'
                            '请联系管理员核查注册或迁移记录。',
     'land_compensation_capacity': '旧用户补3块后将超出当前30个绘图位置，'
@@ -76,7 +108,7 @@ def operation_id(bot_id, platform, user_id, message_id, action):
 class Runtime:
     def __init__(self, data_dir, font_path=None, deployment="zhenxun-preview",
                  image_format="AUTO", *, font_dir=None,
-                 font_setting="FARM_PREVIEW_FONT", image_quality=75,
+                 image_quality=75,
                  image_quality_provider=None, framework='zhenxun',
                  resource_source='Github', service_url='',
                  resource_options_provider=None):
@@ -92,7 +124,6 @@ class Runtime:
         self.image_quality_provider = image_quality_provider
         self.data_dir = Path(data_dir).resolve()
         self.font_path = font_path
-        self.font_setting = font_setting
         self.font_dir = Path(font_dir or "resources/font")
         self.deployment = deployment
         self.image_format = image_format
@@ -102,8 +133,13 @@ class Runtime:
         self.started = False
         self.log_handler = None
         self.legacy_source = self.data_dir / 'farm.db'
+        self._resource_lock = asyncio.Lock()
+        self._closing = False
+        self._close_task = None
 
     async def start(self):
+        if self._closing:
+            return
         if self.started:
             return
         self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -121,55 +157,70 @@ class Runtime:
             logger.error("farm preview database initialization failed")
             await self.close()
             raise
-        if self.font_path:
-            candidates = [Path(self.font_path)]
-        else:
-            candidates = [self.font_dir / name for name in (
-                "HYWenHei-85W.ttf", "msyh.ttf", "syht.otf", "syst.otf",
-                "AlibabaHealthFont2.0CN-85B.ttf",
-            )]
-            candidates.extend(Path(name) for name in (
-                "C:/Windows/Fonts/msyh.ttc", "C:/Windows/Fonts/simsun.ttc",
-                "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-                "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
-            ))
-        try:
-            if self.resource_options_provider is not None:
-                self.resource_source, self.service_url = (
-                    self.resource_options_provider()
-                )
-            bundle_path = await asyncio.to_thread(
-                ensure_assets, self.data_dir, self.resource_source,
-                self.service_url,
-            )
-        except Exception:
-            # 不将下载URL、服务地址或可能带凭据的网络异常写入日志。
-            logger.error('farm assets unavailable; using text; '
-                         'check resource source and service address')
-            bundle_path = None
-        for candidate in candidates if bundle_path is not None else ():
-            if not candidate.is_file():
-                continue
-            try:
-                self.rendering = RenderService(FarmRenderer(
-                    candidate, bundle_path=bundle_path,
-                ))
-                logger.info("farm preview font selected file=%s", candidate.name)
-                break
-            except (ValueError, OSError):
-                logger.warning("farm preview font candidate is not loadable")
-        if self.rendering is None:
-            logger.warning("farm preview font unavailable; text mode only")
+        await self._prepare_resources()
         self.started = True
         logger.info("farm preview initialized schema=%s", SCHEMA_VERSION)
 
+    async def _prepare_resources(self):
+        async with self._resource_lock:
+            if self._closing or self.rendering is not None:
+                return
+            resource = 'configuration'
+            try:
+                if self.resource_options_provider is not None:
+                    self.resource_source, self.service_url = (
+                        self.resource_options_provider()
+                    )
+                validate_options(self.resource_source, self.service_url)
+                resource = 'assets'
+                bundle_path = await asyncio.to_thread(
+                    ensure_assets, self.data_dir, self.resource_source,
+                    self.service_url,
+                )
+                resource = 'font'
+                candidate = (Path(self.font_path) if self.font_path else
+                             await asyncio.to_thread(
+                                 ensure_font, self.data_dir,
+                                 self.resource_source, self.service_url,
+                             ))
+                resource = 'renderer'
+                self.rendering = RenderService(FarmRenderer(
+                    candidate, bundle_path=bundle_path,
+                ))
+                logger.info('farm resources ready font=%s', candidate.name)
+            except Exception as error:
+                source = (self.resource_source if self.resource_source in (
+                    'Github', 'Gitea', 'farm_service',
+                ) else 'invalid')
+                logger.warning(
+                    'farm resource unavailable resource=%s source=%s '
+                    'reason=%s; loading stopped until plugin reload; '
+                    'using text',
+                    resource, source, resource_failure_reason(error),
+                )
+
     async def close(self):
+        if self._close_task is None or self._close_task.done():
+            self._closing = True
+            self._close_task = asyncio.create_task(self._finish_close())
+        task = self._close_task
         try:
-            if self.rendering:
-                await self.rendering.close()
+            # 调用方取消关闭等待时，清理仍独立运行。
+            await asyncio.shield(task)
+        finally:
+            if task.done():
+                self._close_task = None
+
+    async def _finish_close(self):
+        try:
+            async with self._resource_lock:
+                if self.rendering:
+                    await self.rendering.close()
+                self.rendering = None
         finally:
             await self.store.close()
             self.started = False
+            self._closing = False
             if self.log_handler:
                 logging.getLogger(__package__).removeHandler(self.log_handler)
                 self.log_handler.close()
@@ -202,8 +253,7 @@ class Runtime:
             args = shlex.split(arguments)
             if action == "farm" and args:
                 aliases = {
-                    "detail":"details", "my-point":"inventory",
-                    "my-vipPoint":"inventory", "my-seed":"seeds",
+                    "detail":"details", "my-seed":"seeds",
                     "my-plant":"crops", "seed-shop":"shop",
                     "buy-seed":"buy", "sowing":"sow", "harvest":"harvest",
                     "eradicate":"eradicate", "lock-plant":"lock",
@@ -229,14 +279,33 @@ class Runtime:
                     f"（当前{conditions['point']}）\n"
                     '满足条件后发送：开垦'
                 )
+            if action == 'upgrade':
+                if len(args) not in (1, 2) or (len(args) == 2
+                                             and args[1] != '条件'):
+                    return '请发送：土地升级 地块编号 或 土地升级 地块编号 条件'
+                slot = int(args[0])
+                if len(args) == 2:
+                    condition = await self.service.upgrade_conditions(who, slot)
+                    return (
+                        f"地块{slot}：{condition['current_land']}→"
+                        f"{condition['land_name']}（第{condition['ordinal']}块）\n"
+                        f"所需等级：{condition['required_level']}"
+                        f"（当前{condition['level']}）\n"
+                        f"所需农场币：{condition['coin_cost']}"
+                        f"（当前{condition['point']}）\n"
+                        f'升级并使当前季成熟：土地升级 {slot}'
+                    )
+                if op is None:
+                    return '无法取得稳定消息标识，本次写操作未执行。'
+                return receipt_text(await self.service.upgrade(who, slot, op))
             image_actions = ('farm', 'plot_ids', 'details', 'shop',
                              'seeds', 'crops')
             if action in image_actions and action != 'farm' and '高清' in args:
                 return '仅我的农场支持高清，请移除高清参数后重试。'
             quality = self.image_quality
-            text_mode = (action in ('seeds', 'crops') and args
-                         and args[-1] == '文字')
-            if action in image_actions and self.rendering and not text_mode:
+            if action in ('seeds', 'crops') and '文字' in args:
+                raise ValueError()
+            if action in image_actions and self.rendering:
                 try:
                     if self.image_quality_provider is not None:
                         quality = self.image_quality_provider()
@@ -294,7 +363,6 @@ class Runtime:
                 )
             if action in ('crops', 'seeds'):
                 title = '我的作物' if action == 'crops' else '我的种子'
-                mode = args.pop() if args and args[-1] == '文字' else ''
                 if len(args) > 1:
                     raise ValueError()
                 try:
@@ -307,7 +375,7 @@ class Runtime:
                     _, pages = warehouse_page(rows, page)
                 except ValueError:
                     return f'页码无效，请发送：{title} 1'
-                if not self.rendering or mode == '文字':
+                if not self.rendering:
                     return warehouse_text(rows, snapshot, action, page, pages)
                 return await self.rendering.warehouse(
                     rows, snapshot, action, page, pages, self.image_format,
@@ -323,7 +391,7 @@ class Runtime:
                 if not self.rendering:
                     if action == "plot_ids":
                         return plot_ids_text(await self.service.snapshot(who))
-                    return f"请配置 {self.font_setting} 为可用中文字体路径。"
+                    return "农场图片资源暂不可用，请检查素材和小赖字体的下载日志。"
                 now = self.service.clock()
                 theme = season_for(now)
                 logger.info("farm preview seasonal theme=%s", theme)
@@ -396,10 +464,10 @@ class Runtime:
     async def help_menu(self, args):
         if '高清' in args:
             return '仅我的农场支持高清，请移除高清参数后重试。'
-        if args not in ([], ['文字']):
-            return '参数有误，请发送：农场帮助 或 农场帮助 文字'
+        if args:
+            return '参数有误，请发送：农场帮助'
         fallback = help_text(self.command_specs)
-        if args or self.rendering is None:
+        if self.rendering is None:
             return fallback
         quality = self.image_quality
         if self.image_quality_provider is not None:

@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "version": "xiaolai-v3.126",
+  "sha256": "c2d1c1a5247e05b766d12a8d8410594d78b1a8b86031624a05b76ee0515c1335",
+  "size_bytes": 14741741,
+  "sources": {
+    "github": "https://raw.githubusercontent.com/Shu-Ying/farm_service/main/fonts/assets.zip",
+    "gitea": "https://gitea.diuse.work/Diuse/farm_service/raw/branch/main/fonts/assets.zip",
+    "farm_service": "https://farm.example/v1/fonts/c2d1c1a5247e05b766d12a8d8410594d78b1a8b86031624a05b76ee0515c1335/assets.zip"
+  }
+}

@@ -52,7 +52,7 @@ def legacy_plot(row, catalogue):
     slot = integer(row['soilIndex'], 1, 10_000)
     level = integer(row['soilLevel'], 0, 3)
     bonuses = dict(yield_bonus=(10, 10, 20, 28)[level],
-                   experience_bonus=28 if level == 3 else 0)
+                   experience_bonus=28 if level == 3 else 0, land_level=level)
     planted = row['isSoilPlanted']
     if planted not in (None, 0, 1):
         raise FarmError('legacy_data_invalid')

@@ -170,7 +170,7 @@ class SQLiteRepository:
                     r["yield_bonus"], r["experience_bonus"],
                     r["pest_count"], r["pest_spawned"], r["growth_remaining"],
                     r["growth_updated_at"], r["next_pest_at"],
-                    r["maturity_pests"], r['stolen_count'],
+                    r["maturity_pests"], r['stolen_count'], r['land_level'],
                 )
                 for r in rows
             )
@@ -186,13 +186,14 @@ class SQLiteRepository:
             "UPDATE plots SET plant=?, mature_at=?, harvest_count=?, "
             "yield_bonus=?, experience_bonus=?, pest_count=?, pest_spawned=?, "
             "growth_remaining=?, growth_updated_at=?, next_pest_at=?, "
-            "maturity_pests=?, stolen_count=? WHERE identity=? AND slot=?",
+            "maturity_pests=?, stolen_count=?, land_level=? "
+            "WHERE identity=? AND slot=?",
             (
                 data, plot.mature_at, plot.harvest_count, plot.yield_bonus,
                 plot.experience_bonus, plot.pest_count, plot.pest_spawned,
                 plot.growth_remaining, plot.growth_updated_at,
                 plot.next_pest_at, plot.maturity_pests, plot.stolen_count,
-                self._identity, plot.slot,
+                plot.land_level, self._identity, plot.slot,
             ),
         )
         if cursor.rowcount != 1:

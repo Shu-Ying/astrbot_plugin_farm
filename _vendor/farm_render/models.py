@@ -57,6 +57,7 @@ class PlotView:
     stage: int = 0  # 本季展示阶段。
     pest_count: int = 0  # 当前可见虫数；参与成图缓存键。
     pest_frames: tuple[str, ...] = ()  # 按虫序稳定选择的包内帧，参与缓存键。
+    land_level: int = 0  # 土地等级；影响底图和成图缓存。
 
 
 @dataclass(frozen=True)

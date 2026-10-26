@@ -33,8 +33,7 @@ class FarmPlugin(Star):
         if image_format not in ('AUTO', 'JPEG', 'PNG'):
             raise ValueError('image_format must be AUTO, JPEG or PNG')
         self.runtime = Runtime(
-            data_dir, config.get('font_path') or None, 'astrbot',
-            image_format, font_setting='font_path',
+            data_dir, deployment='astrbot', image_format=image_format,
             image_quality=config.get('image_quality', 75),
             image_quality_provider=lambda: self.config.get('image_quality', 75),
             framework='astrbot',
