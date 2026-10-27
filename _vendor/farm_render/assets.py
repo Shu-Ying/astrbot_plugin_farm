@@ -1,6 +1,7 @@
 """包内素材与有界 LRU；不下载、不解压到磁盘、不暴露共享图片。"""
 
 from collections import OrderedDict
+from copy import deepcopy
 from importlib import resources
 from io import BytesIO
 import json
@@ -42,10 +43,14 @@ class ByteLRU:
 
 
 class Assets:
-    def __init__(self, cache_bytes=32 * 1024 * 1024, bundle_path=None):
+    def __init__(self, cache_bytes=32 * 1024 * 1024, bundle_path=None,
+                 metadata=None, soils_path=None):
         data = resources.files(__package__).joinpath("data")
-        self.metadata = json.loads(data.joinpath("metadata.json").read_bytes())
+        self.metadata = (deepcopy(metadata) if metadata is not None else
+                         json.loads(data.joinpath('metadata.json')
+                                    .read_bytes()))
         self.cache = ByteLRU(cache_bytes)
+        self._soils = soils_path or data.joinpath('land-soils.zip')
         self._bundle = (bundle_path if bundle_path is not None
                         else data.joinpath('assets.zip'))
 
@@ -58,9 +63,7 @@ class Assets:
         key = (name, size)
         cached = self.cache.get(key)
         if cached is None:
-            source = (resources.files(__package__).joinpath(
-                'data', 'land-soils.zip',
-            ) if upgrade else self._bundle)
+            source = self._soils if upgrade else self._bundle
             with source.open("rb") as stream, ZipFile(stream) as bundle:
                 content = bundle.read(name)
             with Image.open(BytesIO(content)) as original:

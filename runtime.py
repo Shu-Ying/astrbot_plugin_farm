@@ -23,6 +23,7 @@ from ._vendor.farm_render import FarmRenderer, RenderOptions, RenderService
 from ._vendor.farm_render.seasons import season_for
 from ._vendor.farm_render.bundle import ensure_assets, validate_options
 from ._vendor.farm_render.font_bundle import ensure_font
+from ._vendor.farm_render.catalogue_bundle import load_catalogue_release
 from ._vendor.farm_render.shop import shop_page
 from ._vendor.farm_render.details import detail_rows, details_text
 from ._vendor.farm_render.warehouse import (
@@ -136,12 +137,21 @@ class Runtime:
         self._resource_lock = asyncio.Lock()
         self._closing = False
         self._close_task = None
+        self._start_lock = asyncio.Lock()
+        self._catalogue_task = None
+        self.catalogue_release = None
+        self._start_epoch = 0
 
     async def start(self):
+        async with self._start_lock:
+            await self._start()
+
+    async def _start(self):
         if self._closing:
             return
         if self.started:
             return
+        epoch = self._start_epoch
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.log_handler = logging.FileHandler(
             self.data_dir / "farm-preview.log", encoding="utf-8",
@@ -152,12 +162,34 @@ class Runtime:
         logging.getLogger(__package__).setLevel(logging.INFO)
         logging.getLogger(__package__).addHandler(self.log_handler)
         try:
+            if self.resource_options_provider is not None:
+                self.resource_source, self.service_url = (
+                    self.resource_options_provider()
+                )
+            validate_options(self.resource_source, self.service_url)
+            required_ids = await self.store.catalogue_ids()
+            if self._closing or epoch != self._start_epoch:
+                return
+            self._catalogue_task = asyncio.create_task(asyncio.to_thread(
+                load_catalogue_release, self.data_dir, self.resource_source,
+                self.service_url, required_ids,
+            ))
+            self.catalogue_release = await asyncio.shield(self._catalogue_task)
+            if self._closing or epoch != self._start_epoch:
+                return
+            self.service = FarmService(
+                self.store, self.catalogue_release.catalogue,
+            )
             await self.store.initialize(catalogue=self.service.catalogue)
-        except Exception:
+            if self._closing or epoch != self._start_epoch:
+                return
+        except BaseException:
             logger.error("farm preview database initialization failed")
             await self.close()
             raise
         await self._prepare_resources()
+        if self._closing or epoch != self._start_epoch:
+            return
         self.started = True
         logger.info("farm preview initialized schema=%s", SCHEMA_VERSION)
 
@@ -167,16 +199,20 @@ class Runtime:
                 return
             resource = 'configuration'
             try:
-                if self.resource_options_provider is not None:
+                if (self.catalogue_release is None
+                        and self.resource_options_provider is not None):
                     self.resource_source, self.service_url = (
                         self.resource_options_provider()
                     )
                 validate_options(self.resource_source, self.service_url)
                 resource = 'assets'
-                bundle_path = await asyncio.to_thread(
-                    ensure_assets, self.data_dir, self.resource_source,
-                    self.service_url,
-                )
+                selected = self.catalogue_release
+                bundle_path = selected.bundle_path if selected else None
+                if bundle_path is None:
+                    bundle_path = await asyncio.to_thread(
+                        ensure_assets, self.data_dir, self.resource_source,
+                        self.service_url,
+                    )
                 resource = 'font'
                 candidate = (Path(self.font_path) if self.font_path else
                              await asyncio.to_thread(
@@ -186,6 +222,8 @@ class Runtime:
                 resource = 'renderer'
                 self.rendering = RenderService(FarmRenderer(
                     candidate, bundle_path=bundle_path,
+                    metadata=selected.metadata if selected else None,
+                    soils_path=selected.soils_path if selected else None,
                 ))
                 logger.info('farm resources ready font=%s', candidate.name)
             except Exception as error:
@@ -202,6 +240,7 @@ class Runtime:
     async def close(self):
         if self._close_task is None or self._close_task.done():
             self._closing = True
+            self._start_epoch += 1
             self._close_task = asyncio.create_task(self._finish_close())
         task = self._close_task
         try:
@@ -213,6 +252,11 @@ class Runtime:
 
     async def _finish_close(self):
         try:
+            if self._catalogue_task is not None:
+                try:
+                    await asyncio.shield(self._catalogue_task)
+                except Exception:
+                    pass
             async with self._resource_lock:
                 if self.rendering:
                     await self.rendering.close()

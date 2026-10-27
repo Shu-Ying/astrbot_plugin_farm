@@ -99,8 +99,12 @@ def ensure_assets(data_dir, source='Github', service_url=''):
         target.parent.mkdir(parents=True, exist_ok=True)
         # 清单绑定在插件内；远端不能通过更换清单放行不兼容的素材。
         if source == 'farm_service':
-            url = (service_url.rstrip('/') + '/v1/assets/'
-                   + expected['sha256'] + '/assets.zip')
+            if 'catalogue_release' in expected:
+                url = (service_url.rstrip('/') + '/v1/catalogue/releases/'
+                       + expected['catalogue_release'] + '/assets.zip')
+            else:
+                url = (service_url.rstrip('/') + '/v1/assets/'
+                       + expected['sha256'] + '/assets.zip')
         else:
             url = expected['sources'][source.lower()]
         temporary = None

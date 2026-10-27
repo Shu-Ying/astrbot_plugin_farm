@@ -103,6 +103,50 @@ SCHEMA = (
 
 
 class SQLiteStore:
+    async def catalogue_ids(self):
+        """初始化前只读检查库存与地块ID；不创建文件或迁移数据库。"""
+        task = asyncio.create_task(asyncio.to_thread(self._catalogue_ids))
+        try:
+            return await asyncio.shield(task)
+        except asyncio.CancelledError:
+            try:
+                await task
+            except Exception:
+                pass
+            raise
+
+    def _catalogue_ids(self):
+        if not self.path.is_file():
+            return set()
+        with closing(sqlite3.connect(
+                self.path.as_uri() + '?mode=ro', uri=True)) as connection:
+            connection.execute('BEGIN')
+            app = connection.execute('PRAGMA application_id').fetchone()[0]
+            version = connection.execute('PRAGMA user_version').fetchone()[0]
+            tables = {row[0] for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'",
+            )}
+            if app == 0 and version == 0 and not tables:
+                return set()
+            if app != APPLICATION_ID or not 1 <= version <= SCHEMA_VERSION:
+                raise SchemaError('Unsupported farm database')
+            result = set()
+            if version >= 2:
+                result.update(row[0] for row in connection.execute(
+                    'SELECT DISTINCT plant_id FROM inventory '
+                    'WHERE seeds>0 OR crops>0',
+                ))
+            for row in connection.execute(
+                    'SELECT plant FROM plots WHERE plant IS NOT NULL'):
+                try:
+                    result.add(json.loads(row[0])['plant_id'])
+                except (KeyError, TypeError, ValueError) as error:
+                    raise SchemaError('Invalid saved crop definition') \
+                        from error
+            if any(type(value) is not int or value <= 0 for value in result):
+                raise SchemaError('Invalid saved crop ID')
+            return result
+
     def __init__(self, path: str | Path, timeout: float = 10):
         if str(path) == ":memory:":
             raise ValueError("Use a dedicated file for transaction connections")

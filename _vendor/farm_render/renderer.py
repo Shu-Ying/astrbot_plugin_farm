@@ -26,13 +26,14 @@ class FarmRenderer:
     def __init__(
         self, font_path, asset_cache_bytes=32 * 1024 * 1024,
         result_cache_bytes=8 * 1024 * 1024,
-        bundle_path=None,
+        bundle_path=None, metadata=None, soils_path=None,
     ):
         self.font_path = Path(font_path).resolve()
         if not self.font_path.is_file():
             raise ValueError("Configure an existing Chinese font path")
         font(self.font_path, 16)
-        self.assets = Assets(asset_cache_bytes, bundle_path=bundle_path)
+        self.assets = Assets(asset_cache_bytes, bundle_path=bundle_path,
+                             metadata=metadata, soils_path=soils_path)
         self.results = ByteLRU(result_cache_bytes)
 
     def scene(self, identity, snapshot, now):
