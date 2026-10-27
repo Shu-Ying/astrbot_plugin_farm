@@ -1,7 +1,6 @@
 """应用用例：一次业务动作对应一次完整存储事务。"""
 
 from dataclasses import asdict, replace
-import logging
 import time
 import secrets
 
@@ -16,7 +15,7 @@ from .land import COMPENSATION_ID, SUPPORTED_PLOTS, next_rule, owned_count
 from .land import LAND_NAMES, upgrade_rule
 
 
-LOGGER = logging.getLogger(__name__)
+from astrbot.api import logger as LOGGER
 
 
 class FarmService:

@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
-import logging
 
 from PIL import Image, ImageDraw
 
@@ -15,7 +14,7 @@ from .assets import Assets
 from .layout import scene_from_snapshot
 from .models import RenderOptions
 
-logger = logging.getLogger(__name__)
+from astrbot.api import logger
 PAGE_SIZE = 10
 BEIJING = timezone(timedelta(hours=8))
 

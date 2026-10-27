@@ -1,6 +1,5 @@
 """文字指令使用的木质种子价目板；全部价格来自离线目录。"""
 
-import logging
 import shlex
 
 from PIL import Image
@@ -8,7 +7,7 @@ from PIL import Image
 from .canvas import Canvas, font
 from .models import RenderOptions
 
-logger = logging.getLogger(__name__)
+from astrbot.api import logger
 PAGE_SIZE = 6
 
 

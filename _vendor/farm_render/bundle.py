@@ -3,7 +3,6 @@
 import hashlib
 from importlib import resources
 import json
-import logging
 from pathlib import Path
 import tempfile
 import threading
@@ -12,7 +11,7 @@ from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 from zipfile import ZipFile
 
-logger = logging.getLogger(__name__)
+from astrbot.api import logger
 _LOCK = threading.Lock()
 SOURCES = ('Github', 'Gitea', 'farm_service')
 MAX_BYTES = 64 * 1024 * 1024
@@ -43,21 +42,48 @@ def checked_url(url):
 
 def _copy_remote(url, destination, limit):
     request = Request(checked_url(url), headers={'User-Agent': 'Farm-assets/1'})
+    parts = urlsplit(url).path.split('/')
+    name = {
+        'manifest.json': '作物版本清单', 'plants.json': '作物列表',
+        'metadata.json': '展示配置', 'land-soils.zip': '土地素材',
+        'assets.zip': '字体包' if 'fonts' in parts else '图片素材包',
+    }.get(parts[-1], '资源')
     started = time.monotonic()
-    with urlopen(request, timeout=15) as response:
-        checked_url(response.geturl())
-        length = response.headers.get('Content-Length')
-        if length is not None and int(length) > limit:
-            raise ValueError('Resource download exceeds limit')
-        total = 0
-        while True:
-            chunk = response.read(min(65536, limit-total+1))
-            if not chunk:
-                break
-            total += len(chunk)
-            if total > limit or time.monotonic()-started > 60:
-                raise ValueError('Resource download limit or timeout')
-            destination.write(chunk)
+    last_report = started
+    logger.info('农场下载开始：%s', name)
+    try:
+        with urlopen(request, timeout=15) as response:
+            checked_url(response.geturl())
+            header = response.headers.get('Content-Length')
+            length = int(header) if header is not None else 0
+            if length > limit:
+                raise ValueError('Resource download exceeds limit')
+            total = 0
+            while True:
+                chunk = response.read(min(65536, limit-total+1))
+                if not chunk:
+                    break
+                total += len(chunk)
+                now = time.monotonic()
+                if total > limit or now-started > 60:
+                    raise ValueError('Resource download limit or timeout')
+                destination.write(chunk)
+                if now-last_report >= 1:
+                    if length > 0:
+                        logger.info(
+                            '农场下载进度：%s %.1f%%（%.2f/%.2f MiB）',
+                            name, min(100, total * 100 / length),
+                            total / 1048576, length / 1048576,
+                        )
+                    else:
+                        logger.info('农场下载进度：%s 已下载 %.2f MiB',
+                                    name, total / 1048576)
+                    last_report = now
+        logger.info('农场下载完成：%s 共 %.2f MiB（待校验）',
+                    name, total / 1048576)
+    except Exception as error:
+        logger.warning('农场下载失败：%s（%s）', name, type(error).__name__)
+        raise
 
 
 def verify_bundle(path, manifest):
@@ -93,7 +119,9 @@ def ensure_assets(data_dir, source='Github', service_url=''):
     target = (Path(data_dir) / 'assets' / expected['sha256'] / 'assets.zip')
     with _LOCK:
         try:
-            return verify_bundle(target, expected)
+            cached = verify_bundle(target, expected)
+            logger.info('农场图片素材：复用已校验缓存')
+            return cached
         except (OSError, ValueError):
             pass
         target.parent.mkdir(parents=True, exist_ok=True)

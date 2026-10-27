@@ -4,7 +4,6 @@ import asyncio
 from contextlib import closing, contextmanager
 import hashlib
 import json
-import logging
 from pathlib import Path
 import sqlite3
 
@@ -14,7 +13,7 @@ from .domain import (
 from .repository import SQLiteRepository
 from .catalogue import Catalogue
 
-LOGGER = logging.getLogger(__name__)
+from astrbot.api import logger as LOGGER
 APPLICATION_ID = 0x4641524D
 SCHEMA_VERSION = 5
 
@@ -434,9 +433,9 @@ class SQLiteStore:
                     connection.commit()
                 except BaseException as exc:
                     connection.rollback()
-                    LOGGER.log(
-                        logging.INFO if isinstance(exc, FarmError)
-                        else logging.WARNING,
+                    report = (LOGGER.info if isinstance(exc, FarmError)
+                              else LOGGER.warning)
+                    report(
                         "farm rollback action=%s operation=%s error=%s",
                         action, operation_id, type(exc).__name__,
                     )

@@ -2,10 +2,10 @@
 
 import asyncio
 import json
-import logging
 from pathlib import Path
 
 from astrbot.api import AstrBotConfig
+from astrbot.api import logger
 from astrbot.api.event import AstrMessageEvent, filter
 from astrbot.api.message_components import At, Image
 from astrbot.api.star import Context, Star, StarTools
@@ -14,9 +14,6 @@ from .avatars import AvatarCache
 from .runtime import Runtime, command_map
 
 COMMANDS = command_map('astrbot')
-
-
-logger = logging.getLogger(__name__)
 
 
 class FarmPlugin(Star):

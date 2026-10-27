@@ -3,7 +3,6 @@
 from dataclasses import replace
 import hashlib
 from io import BytesIO
-import logging
 from math import sqrt
 from pathlib import Path
 from time import perf_counter
@@ -16,7 +15,7 @@ from .layout import scene_from_snapshot
 from .models import RenderOptions, RenderResult
 from .placement import ground_contact, place_sprite
 
-logger = logging.getLogger(__name__)
+from astrbot.api import logger
 MAX_AVATAR_BYTES = 2 * 1024 * 1024
 MAX_AVATAR_PIXELS = 4_000_000
 PANEL_UNUSED_ROW = (168, 208)

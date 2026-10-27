@@ -1,7 +1,6 @@
 """异步入口：一次快照、有限任务、共享绘制与关闭排空。"""
 
 import asyncio
-import logging
 from time import perf_counter
 import time
 import hashlib
@@ -11,7 +10,7 @@ from .details import render_details
 from .warehouse import render_warehouse
 from .help import render_help
 
-logger = logging.getLogger(__name__)
+from astrbot.api import logger
 
 
 class RenderService:

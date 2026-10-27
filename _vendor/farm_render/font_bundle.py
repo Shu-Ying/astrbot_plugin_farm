@@ -10,6 +10,7 @@ from zipfile import ZipFile
 from .bundle import _LOCK, _copy_remote, validate_options
 
 
+from astrbot.api import logger
 FONT_NAME = "Xiaolai-Regular.ttf"
 FILES = {
     FONT_NAME: (
@@ -61,6 +62,7 @@ def ensure_font(data_dir, source="Github", service_url=""):
     with _LOCK:
         if all(_valid(root / name, *checks)
                for name, checks in FILES.items()):
+            logger.info('农场字体：复用已校验缓存')
             return root / FONT_NAME
         root.mkdir(parents=True, exist_ok=True)
         archive_path = root / "assets.zip"
@@ -103,4 +105,5 @@ def ensure_font(data_dir, source="Github", service_url=""):
         # 先写许可，再使字体可用；不使用 extractall 或远端提供的路径。
         for name in ("OFL-Xiaolai.txt", FONT_NAME):
             _atomic_write(root / name, content[name])
+        logger.info('农场字体和许可证校验通过')
         return root / FONT_NAME

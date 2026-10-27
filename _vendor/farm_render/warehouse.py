@@ -1,7 +1,6 @@
 """一次快照的分类仓库展示；不修改库存或资产。"""
 
 from dataclasses import dataclass
-import logging
 import shlex
 
 from PIL import Image
@@ -12,7 +11,7 @@ from .canvas import Canvas, font
 from .models import RenderOptions
 from .shop import duration
 
-logger = logging.getLogger(__name__)
+from astrbot.api import logger
 PAGE_SIZE = 12
 
 

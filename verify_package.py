@@ -1,6 +1,7 @@
 """AstrBot插件ZIP的独立完整性校验；只使用标准库。"""
 
 import argparse
+import ast
 import hashlib
 import json
 from pathlib import Path, PurePosixPath
@@ -37,8 +38,39 @@ def verify_files(files):
         safe_path(name)
         if hashlib.sha256(files[name]).hexdigest() != digest:
             raise ValueError('Package checksum mismatch')
+        if name.endswith('/__main__.py'):
+            raise ValueError('Development CLI must not be in AstrBot plugin')
+        if name.endswith('.py'):
+            tree = ast.parse(files[name], filename=name)
+            host_loggers = {
+                alias.asname or alias.name
+                for node in ast.walk(tree)
+                if isinstance(node, ast.ImportFrom)
+                and node.module == 'astrbot.api'
+                for alias in node.names if alias.name == 'logger'
+            }
+            for node in ast.walk(tree):
+                if (isinstance(node, ast.Import) and any(
+                        alias.name.split('.')[0] == 'logging'
+                        for alias in node.names)) or (
+                        isinstance(node, ast.ImportFrom)
+                        and (node.module or '').split('.')[0] == 'logging'):
+                    raise ValueError('AstrBot plugin must not import logging')
+                if isinstance(node, ast.Attribute) and node.attr in {
+                        'basicConfig', 'FileHandler', 'StreamHandler',
+                        'getLogger', 'setLevel', 'addHandler', 'removeHandler'}:
+                    raise ValueError('AstrBot must own logging configuration')
+                if (isinstance(node, ast.Call)
+                        and isinstance(node.func, ast.Attribute)
+                        and isinstance(node.func.value, ast.Name)
+                        and node.func.value.id in {'logger', 'LOGGER'}
+                        and node.func.value.id not in host_loggers):
+                    raise ValueError(
+                        'AstrBot logger must come from astrbot.api',
+                    )
     required = {'main.py', 'avatars.py', 'metadata.yaml', '_conf_schema.json',
-                'runtime.py', 'README.md', 'CHANGELOG.md', 'logo.png',
+                'runtime.py', 'runtime_logging.py', 'README.md',
+                'CHANGELOG.md', 'logo.png',
                 'logo-readme.png',
                 'images/farm-preview.png',
                 'requirements.txt', 'LICENSE', 'version.txt', '_version.py',

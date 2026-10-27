@@ -4,12 +4,12 @@ import hashlib
 import asyncio
 from dataclasses import replace
 import json
-import logging
 from pathlib import Path
 import shlex
 from urllib.error import HTTPError, URLError
 from zipfile import BadZipFile
 
+from .runtime_logging import open_logs, close_logs
 from ._vendor.farm_core import Catalogue, FarmService, Identity, SQLiteStore
 from ._vendor.farm_core.domain import FarmError
 from ._vendor.farm_core.commands import (
@@ -30,7 +30,7 @@ from ._vendor.farm_render.warehouse import (
     warehouse_page, warehouse_rows, warehouse_text,
 )
 
-logger = logging.getLogger(__name__)
+from astrbot.api import logger
 COMMANDS = command_map('zhenxun')
 HELP = help_text(command_specs('zhenxun'))
 
@@ -133,6 +133,7 @@ class Runtime:
         self.rendering = None
         self.started = False
         self.log_handler = None
+        self.console_handler = None
         self.legacy_source = self.data_dir / 'farm.db'
         self._resource_lock = asyncio.Lock()
         self._closing = False
@@ -153,15 +154,9 @@ class Runtime:
             return
         epoch = self._start_epoch
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        self.log_handler = logging.FileHandler(
-            self.data_dir / "farm-preview.log", encoding="utf-8",
-        )
-        self.log_handler.setFormatter(logging.Formatter(
-            "%(asctime)s %(levelname)s %(name)s %(message)s",
-        ))
-        logging.getLogger(__package__).setLevel(logging.INFO)
-        logging.getLogger(__package__).addHandler(self.log_handler)
+        self.log_handler, self.console_handler = open_logs(self.data_dir)
         try:
+            logger.info('农场启动：正在检查作物版本和本地缓存')
             if self.resource_options_provider is not None:
                 self.resource_source, self.service_url = (
                     self.resource_options_provider()
@@ -191,6 +186,8 @@ class Runtime:
         if self._closing or epoch != self._start_epoch:
             return
         self.started = True
+        logger.info('农场启动完成（%s）',
+                    '图片可用' if self.rendering else '文字模式')
         logger.info("farm preview initialized schema=%s", SCHEMA_VERSION)
 
     async def _prepare_resources(self):
@@ -206,6 +203,7 @@ class Runtime:
                     )
                 validate_options(self.resource_source, self.service_url)
                 resource = 'assets'
+                logger.info('农场启动：正在准备图片素材和字体')
                 selected = self.catalogue_release
                 bundle_path = selected.bundle_path if selected else None
                 if bundle_path is None:
@@ -265,10 +263,8 @@ class Runtime:
             await self.store.close()
             self.started = False
             self._closing = False
-            if self.log_handler:
-                logging.getLogger(__package__).removeHandler(self.log_handler)
-                self.log_handler.close()
-                self.log_handler = None
+            close_logs(self.log_handler, self.console_handler)
+            self.log_handler = self.console_handler = None
 
     async def execute(
         self, action, arguments, *, bot_id, platform, user_id, message_id,

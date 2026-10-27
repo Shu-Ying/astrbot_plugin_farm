@@ -2,14 +2,13 @@
 
 import asyncio
 from collections import OrderedDict
-import logging
 import re
 from time import monotonic
 
 import aiohttp
+from astrbot.api import logger
 
 
-logger = logging.getLogger(__name__)
 MAX_BYTES = 2 * 1024 * 1024
 MAX_ENTRIES = 16
 FETCH_TIMEOUT = 2
