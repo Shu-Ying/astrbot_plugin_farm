@@ -49,9 +49,9 @@
 ---
 
 ## 如何安装
+在Astrbot的插件商店下载即可
 
-方法一（推荐）：在小真寻后台的插件商店下载即可<br>
-方法二：下载源码放在小真寻`plugin`目录下
+`在安装后，每次启动均会向`[farm_service](https://github.com/Shu-Ying/farm_service)`仓库进行下载资源，默认使用Github进行下载，可以在设置中切换为Gitea镜像`
 
 ---
 

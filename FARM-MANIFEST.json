@@ -2,7 +2,7 @@
   "files": {
     "CHANGELOG.md": "c47d86dddeb371d7e98f668714f684827e1a142b0f22b12bf1600f78676414ec",
     "LICENSE": "8b1ba204bb69a0ade2bfcf65ef294a920f6bb361b317dba43c7ef29d96332b9b",
-    "README.md": "45af2a73fc088dd782490f3a94bf373934ec859a89a8e251134433590f9d082b",
+    "README.md": "f25f6beb1a15caf8b86b44f42c8d7c3bd813e9ca7efb60dc0f188a338e1da846",
     "_conf_schema.json": "d9253640ed14f6db7d93979d9f96528c2ce1225074ab74f211fc2d2139b6c7d5",
     "_vendor/__init__.py": "79e09ef3268808d729d65e7deafdae6352ba491d920b2cc7b5acc95e7ece804d",
     "_vendor/farm_core/__init__.py": "c01dd23608fca46ec558381c843691267de9ce1e43043146835eba6878031ae5",
@@ -48,28 +48,28 @@
     "_vendor/farm_render/service.py": "a39bf6a7e4ac53d11a676608af19e0d616a4542bb082338600b4b03bad4aef26",
     "_vendor/farm_render/shop.py": "8eb97053c462a8395d5d53b1a1a2e954fd83ba5fccac8007e5bde1b725cf3e89",
     "_vendor/farm_render/warehouse.py": "f505c85902c2408ed29f7ab5ce313f5adaa78fbbc06c95d85fb3d8402a5f0ead",
-    "_version.py": "64e838d5a0a0284b8e6cae5685e8229177a4b4558f25a799f9330387429ef793",
+    "_version.py": "c446fb6786fcc5a9575c4c41838d973c085b24a9e21f372c10f8e9fba4b7a698",
     "avatars.py": "111726ccf789936aaab1cb8a427cba1554376eb03b00ca40365d37702803f772",
     "images/farm-preview.png": "31b2b0ce463915133667e1abcd8731a1c812b6ee4d5ebf7f6af90deb042beab3",
     "images/help-astrbot.png": "d9030d1e1b22827f0d32c7566dad6ae41cec3a36b092d98782d863b324312cf3",
     "logo-readme.png": "b6dcbb784d1c0e36e2139ff974a5fb15b11b478fba40b40cfc68c4db74ad1ad3",
     "logo.png": "4cea5f9277aaa3acd4f325abeebe25743c68f87390626d75357a07b3994c6545",
     "main.py": "dbb759a623aefd409838c3da343e1466d145570fb2700e1d5c3f90d5e7cf78f3",
-    "metadata.yaml": "2b17a63c34ae3db5af1e8a18a0dc92f1d924d467b3a70251e9f50fbde5943ccb",
+    "metadata.yaml": "f5ea7c26939df8ccdf2eec1d044326ee39efbbe378cf88d7c801f500b3fd1bfa",
     "requirements.txt": "bd27b988a780752a8b65b93545dcdc48d39e178859453da1c77f89ff779f4e86",
     "runtime.py": "d90eba3042fcd7d191137a610889b2d67deecfb36d676e6058541f0ac5b50582",
     "runtime_logging.py": "a38f297d93e4594da4590a8c6459bfd6f561600c96b202fb75bb1674470af686",
     "verify_package.py": "57d6d43c3bb804f2b20b7ebf3f276803b797472e70090404f4d407cfe1105033",
-    "version.txt": "a8d4609d3074178dfd6e468d23fe83f2ea46e02faecff056938b59256e7f5bb6"
+    "version.txt": "ce0a2005da2b159fde33efc005d063470ccc2ccc54ffb702dfafb2c330285040"
   },
   "plugin": "astrbot_plugin_farm",
   "schema": 1,
   "source": {
-    "commit": "d05b2e57654542615f36ca456a91fede74ca765a",
+    "commit": "c6b504924e57bc287f746dc0c37db5af0f11c9bd",
     "dirty": false,
-    "message": "fixed # 修复astrbot日志未使用logging.basicConfig",
+    "message": "fixed # 修复部分工作流BUG",
     "repository": "https://github.com/Shu-Ying/main_plugin_farm.git"
   },
   "target": "astrbot",
-  "version": "2.0.4"
+  "version": "2.0.5"
 }

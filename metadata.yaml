@@ -3,7 +3,7 @@
   "display_name": "农场",
   "short_desc": "开通农场，体验种植、收获、偷菜与土地开垦。",
   "desc": "农场种植小游戏，支持种子商店、分类仓库、作物交易、除虫、偷菜、土地开垦和动态图片帮助；使用本地存档。",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "author": "Shu-Ying",
   "repo": "https://github.com/Shu-Ying/astrbot_plugin_farm",
   "social_link": "https://github.com/Shu-Ying",
