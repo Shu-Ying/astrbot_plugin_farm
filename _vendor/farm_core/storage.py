@@ -1,19 +1,25 @@
 """显式初始化的 SQLite 存储；每个用例独占一条事务连接。"""
 
 import asyncio
-from contextlib import closing, contextmanager
 import hashlib
 import json
-from pathlib import Path
 import sqlite3
-
-from .domain import (
-    FarmError, Identity, Receipt, SchemaError, Snapshot, StorageError,
-)
-from .repository import SQLiteRepository
-from .catalogue import Catalogue
+from contextlib import closing, contextmanager
+from pathlib import Path
 
 from astrbot.api import logger as LOGGER
+
+from .catalogue import Catalogue
+from .domain import (
+    FarmError,
+    Identity,
+    Receipt,
+    SchemaError,
+    Snapshot,
+    StorageError,
+)
+from .repository import SQLiteRepository
+
 APPLICATION_ID = 0x4641524D
 SCHEMA_VERSION = 5
 
@@ -73,9 +79,11 @@ SCHEMA = (
         experience_bonus INTEGER NOT NULL DEFAULT 0,
         stolen_count INTEGER NOT NULL DEFAULT 0 CHECK(stolen_count>=0),
         land_level INTEGER NOT NULL DEFAULT 0 CHECK(land_level BETWEEN 0 AND 3),
-        """ + ",\n        ".join(
-            f"{name} {definition}" for name, definition in PEST_COLUMNS.items()
-        ) + """,
+        """
+    + ",\n        ".join(
+        f"{name} {definition}" for name, definition in PEST_COLUMNS.items()
+    )
+    + """,
         PRIMARY KEY(identity, slot)
     )""",
     """CREATE TABLE thefts(
@@ -117,33 +125,42 @@ class SQLiteStore:
     def _catalogue_ids(self):
         if not self.path.is_file():
             return set()
-        with closing(sqlite3.connect(
-                self.path.as_uri() + '?mode=ro', uri=True)) as connection:
-            connection.execute('BEGIN')
-            app = connection.execute('PRAGMA application_id').fetchone()[0]
-            version = connection.execute('PRAGMA user_version').fetchone()[0]
-            tables = {row[0] for row in connection.execute(
-                "SELECT name FROM sqlite_master WHERE type='table'",
-            )}
+        with closing(
+            sqlite3.connect(self.path.as_uri() + "?mode=ro", uri=True)
+        ) as connection:
+            connection.execute("BEGIN")
+            app = connection.execute("PRAGMA application_id").fetchone()[0]
+            version = connection.execute("PRAGMA user_version").fetchone()[0]
+            tables = {
+                row[0]
+                for row in connection.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'",
+                )
+            }
             if app == 0 and version == 0 and not tables:
                 return set()
             if app != APPLICATION_ID or not 1 <= version <= SCHEMA_VERSION:
-                raise SchemaError('Unsupported farm database')
+                raise SchemaError("Unsupported farm database")
             result = set()
             if version >= 2:
-                result.update(row[0] for row in connection.execute(
-                    'SELECT DISTINCT plant_id FROM inventory '
-                    'WHERE seeds>0 OR crops>0',
-                ))
+                result.update(
+                    row[0]
+                    for row in connection.execute(
+                        "SELECT DISTINCT plant_id FROM inventory "
+                        "WHERE seeds>0 OR crops>0",
+                    )
+                )
             for row in connection.execute(
-                    'SELECT plant FROM plots WHERE plant IS NOT NULL'):
+                "SELECT plant FROM plots WHERE plant IS NOT NULL"
+            ):
                 try:
-                    result.add(json.loads(row[0])['plant_id'])
+                    result.add(json.loads(row[0])["plant_id"])
                 except (KeyError, TypeError, ValueError) as error:
-                    raise SchemaError('Invalid saved crop definition') \
-                        from error
+                    raise SchemaError(
+                        "Invalid saved crop definition"
+                    ) from error
             if any(type(value) is not int or value <= 0 for value in result):
-                raise SchemaError('Invalid saved crop ID')
+                raise SchemaError("Invalid saved crop ID")
             return result
 
     def __init__(self, path: str | Path, timeout: float = 10):
@@ -170,9 +187,13 @@ class SQLiteStore:
     @contextmanager
     def _connection(self):
         try:
-            with closing(sqlite3.connect(
-                self.path, timeout=self._timeout, isolation_level=None,
-            )) as connection:
+            with closing(
+                sqlite3.connect(
+                    self.path,
+                    timeout=self._timeout,
+                    isolation_level=None,
+                )
+            ) as connection:
                 connection.row_factory = sqlite3.Row
                 connection.execute("PRAGMA foreign_keys=ON")
                 yield connection
@@ -184,15 +205,17 @@ class SQLiteStore:
         app_id = connection.execute("PRAGMA application_id").fetchone()[0]
         version = connection.execute("PRAGMA user_version").fetchone()[0]
         tables = {
-            r[0] for r in connection.execute(
+            r[0]
+            for r in connection.execute(
                 "SELECT name FROM sqlite_master WHERE type='table'"
             )
         }
         expected = {"accounts", "operations", "inventory", "plots", "ledger"}
         if expected_version >= 4:
-            expected.add('thefts')
+            expected.add("thefts")
         if (
-            app_id != APPLICATION_ID or version != expected_version
+            app_id != APPLICATION_ID
+            or version != expected_version
             or tables != expected
         ):
             raise SchemaError("unsupported_database_schema")
@@ -213,8 +236,11 @@ class SQLiteStore:
             try:
                 plant = json.loads(row[0])
                 name, plant_id = plant["name"], plant["plant_id"]
-                if (not isinstance(name, str) or type(plant_id) is not int
-                        or plant_id < 1):
+                if (
+                    not isinstance(name, str)
+                    or type(plant_id) is not int
+                    or plant_id < 1
+                ):
                     raise ValueError()
                 names.setdefault(name, set()).add(plant_id)
             except (KeyError, TypeError, ValueError) as exc:
@@ -225,16 +251,23 @@ class SQLiteStore:
             ids = names.get(row["name"], set())
             if len(ids) != 1:
                 raise SchemaError("inventory_identity_unresolved")
-            migrated.append((
-                row["identity"], next(iter(ids)), row["name"],
-                row["seeds"], row["crops"], row["locked"],
-            ))
+            migrated.append(
+                (
+                    row["identity"],
+                    next(iter(ids)),
+                    row["name"],
+                    row["seeds"],
+                    row["crops"],
+                    row["locked"],
+                )
+            )
         statement = next(
             sql for sql in SCHEMA if sql.startswith("CREATE TABLE inventory(")
         )
         connection.execute(statement.replace("inventory(", "inventory_v2(", 1))
         connection.executemany(
-            "INSERT INTO inventory_v2 VALUES (?, ?, ?, ?, ?, ?)", migrated,
+            "INSERT INTO inventory_v2 VALUES (?, ?, ?, ?, ?, ?)",
+            migrated,
         )
         connection.execute("DROP TABLE inventory")
         connection.execute("ALTER TABLE inventory_v2 RENAME TO inventory")
@@ -249,9 +282,9 @@ class SQLiteStore:
             migrated_pests = False
             try:
                 app = connection.execute("PRAGMA application_id").fetchone()[0]
-                version = connection.execute(
-                    "PRAGMA user_version"
-                ).fetchone()[0]
+                version = connection.execute("PRAGMA user_version").fetchone()[
+                    0
+                ]
                 tables = connection.execute(
                     "SELECT name FROM sqlite_master WHERE type='table'"
                 ).fetchall()
@@ -265,7 +298,8 @@ class SQLiteStore:
                 elif app == APPLICATION_ID and version == 1:
                     self._validate(connection, expected_version=1)
                     migration_catalogue = (
-                        catalogue if catalogue is not None
+                        catalogue
+                        if catalogue is not None
                         else Catalogue.bundled()
                     )
                     migrated_rows = self._migrate_inventory(
@@ -285,22 +319,25 @@ class SQLiteStore:
                 if app == APPLICATION_ID and version == 3:
                     self._validate(connection, expected_version=3)
                     connection.execute(
-                        'ALTER TABLE plots ADD COLUMN stolen_count '
-                        'INTEGER NOT NULL DEFAULT 0 CHECK(stolen_count>=0)'
+                        "ALTER TABLE plots ADD COLUMN stolen_count "
+                        "INTEGER NOT NULL DEFAULT 0 CHECK(stolen_count>=0)"
                     )
-                    connection.execute(next(
-                        sql for sql in SCHEMA
-                        if sql.startswith('CREATE TABLE thefts(')
-                    ))
-                    connection.execute('PRAGMA user_version=4')
-                    LOGGER.info('farm schema migrated version=4 theft=enabled')
+                    connection.execute(
+                        next(
+                            sql
+                            for sql in SCHEMA
+                            if sql.startswith("CREATE TABLE thefts(")
+                        )
+                    )
+                    connection.execute("PRAGMA user_version=4")
+                    LOGGER.info("farm schema migrated version=4 theft=enabled")
                     version = 4
                 if app == APPLICATION_ID and version == 4:
                     self._validate(connection, expected_version=4)
                     connection.execute(
-                        'ALTER TABLE plots ADD COLUMN land_level '
-                        'INTEGER NOT NULL DEFAULT 0 '
-                        'CHECK(land_level BETWEEN 0 AND 3)'
+                        "ALTER TABLE plots ADD COLUMN land_level "
+                        "INTEGER NOT NULL DEFAULT 0 "
+                        "CHECK(land_level BETWEEN 0 AND 3)"
                     )
                     # 从已保留的迁移原始记录恢复等级，不按收益加成猜测。
                     for row in connection.execute(
@@ -308,24 +345,27 @@ class SQLiteStore:
                         "WHERE action='legacy_import'"
                     ).fetchall():
                         try:
-                            archive = json.loads(row['result'])
-                            soils = archive['legacy_rows'].get('userSoil', [])
+                            archive = json.loads(row["result"])
+                            soils = archive["legacy_rows"].get("userSoil", [])
                             for soil in soils:
-                                level = soil['soilLevel']
-                                slot = soil['soilIndex']
-                                if (type(level) is not int
-                                        or not 0 <= level <= 3
-                                        or type(slot) is not int or slot < 1):
-                                    raise ValueError('Invalid legacy soil')
+                                level = soil["soilLevel"]
+                                slot = soil["soilIndex"]
+                                if (
+                                    type(level) is not int
+                                    or not 0 <= level <= 3
+                                    or type(slot) is not int
+                                    or slot < 1
+                                ):
+                                    raise ValueError("Invalid legacy soil")
                                 connection.execute(
-                                    'UPDATE plots SET land_level=? '
-                                    'WHERE identity=? AND slot=?',
-                                    (level, row['identity'], slot),
+                                    "UPDATE plots SET land_level=? "
+                                    "WHERE identity=? AND slot=?",
+                                    (level, row["identity"], slot),
                                 )
                         except (KeyError, TypeError, ValueError) as error:
-                            raise SchemaError('legacy_land_invalid') from error
-                    connection.execute('PRAGMA user_version=5')
-                    LOGGER.info('farm schema migrated version=5 land=enabled')
+                            raise SchemaError("legacy_land_invalid") from error
+                    connection.execute("PRAGMA user_version=5")
+                    LOGGER.info("farm schema migrated version=5 land=enabled")
                 self._validate(connection)
                 connection.commit()
                 if migrated_rows is not None:
@@ -359,7 +399,7 @@ class SQLiteStore:
         def execute():
             with self._connection() as connection:
                 self._validate(connection)
-                connection.execute('BEGIN IMMEDIATE')
+                connection.execute("BEGIN IMMEDIATE")
                 try:
                     bound = connection.execute(
                         "SELECT identity FROM operations "
@@ -368,25 +408,30 @@ class SQLiteStore:
                     ).fetchall()
                     if bound:
                         if any(row[0] != identity.key for row in bound):
-                            raise FarmError('legacy_identity_bound')
+                            raise FarmError("legacy_identity_bound")
                         connection.commit()
                         return False
                     archive = read_user(source, identity.user_id)
                     migrated = bool(archive) and import_user(
-                        connection, identity, archive, catalogue, now,
+                        connection,
+                        identity,
+                        archive,
+                        catalogue,
+                        now,
                     )
                     connection.commit()
                     if migrated:
                         LOGGER.info(
-                            'farm legacy migration committed operation=%s '
-                            'tables=%s', migration_id(identity.user_id),
+                            "farm legacy migration committed operation=%s "
+                            "tables=%s",
+                            migration_id(identity.user_id),
                             {name: len(rows) for name, rows in archive.items()},
                         )
                     return migrated
                 except BaseException:
                     connection.rollback()
                     LOGGER.exception(
-                        'farm legacy migration rolled back operation=%s',
+                        "farm legacy migration rolled back operation=%s",
                         migration_id(identity.user_id),
                     )
                     raise
@@ -394,13 +439,20 @@ class SQLiteStore:
         return await self._offload(execute)
 
     async def transact(
-        self, identity: Identity, operation_id: str, action: str,
-        parameters: dict, now: int, operation,
+        self,
+        identity: Identity,
+        operation_id: str,
+        action: str,
+        parameters: dict,
+        now: int,
+        operation,
     ) -> Receipt:
         self._ensure_ready()
         request = json.dumps(
             {"action": action, "parameters": parameters},
-            ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
         )
         fingerprint = hashlib.sha256(request.encode("utf-8")).hexdigest()
 
@@ -420,28 +472,43 @@ class SQLiteStore:
                         result = json.loads(existing["result"])
                     else:
                         repository = SQLiteRepository(
-                            connection, identity.key, operation_id, action, now,
+                            connection,
+                            identity.key,
+                            operation_id,
+                            action,
+                            now,
                         )
                         result = operation(repository)
                         connection.execute(
                             "INSERT INTO operations VALUES (?, ?, ?, ?, ?, ?)",
                             (
-                                identity.key, operation_id, action, fingerprint,
-                                json.dumps(result, ensure_ascii=False), now,
+                                identity.key,
+                                operation_id,
+                                action,
+                                fingerprint,
+                                json.dumps(result, ensure_ascii=False),
+                                now,
                             ),
                         )
                     connection.commit()
                 except BaseException as exc:
                     connection.rollback()
-                    report = (LOGGER.info if isinstance(exc, FarmError)
-                              else LOGGER.warning)
+                    report = (
+                        LOGGER.info
+                        if isinstance(exc, FarmError)
+                        else LOGGER.warning
+                    )
                     report(
                         "farm rollback action=%s operation=%s error=%s",
-                        action, operation_id, type(exc).__name__,
+                        action,
+                        operation_id,
+                        type(exc).__name__,
                     )
                     raise
             LOGGER.info(
-                "farm committed action=%s operation=%s", action, operation_id,
+                "farm committed action=%s operation=%s",
+                action,
+                operation_id,
             )
             return Receipt(operation_id, action, result)
 
@@ -455,10 +522,15 @@ class SQLiteStore:
                 self._validate(connection)
                 connection.execute("BEGIN")
                 repository = SQLiteRepository(
-                    connection, identity.key, "", "query", 0,
+                    connection,
+                    identity.key,
+                    "",
+                    "query",
+                    0,
                 )
                 result = Snapshot(
-                    repository.account(), repository.items(),
+                    repository.account(),
+                    repository.items(),
                     repository.plots(),
                 )
                 connection.commit()

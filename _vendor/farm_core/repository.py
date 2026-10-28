@@ -1,19 +1,29 @@
 """单个 SQLite 事务内的仓储；不自行提交或开启事务。"""
 
-from dataclasses import asdict
 import json
 import sqlite3
+from dataclasses import asdict
 
 from .domain import (
-    Account, Asset, FarmError, InventoryItem, Plot, Plant, StorageError,
+    Account,
+    Asset,
+    FarmError,
+    InventoryItem,
+    Plant,
+    Plot,
+    StorageError,
     integer,
 )
 
 
 class SQLiteRepository:
     def __init__(
-        self, connection: sqlite3.Connection, identity: str,
-        operation_id: str, action: str, now: int,
+        self,
+        connection: sqlite3.Connection,
+        identity: str,
+        operation_id: str,
+        action: str,
+        now: int,
     ):
         self._db = connection
         self._identity = identity
@@ -24,7 +34,8 @@ class SQLiteRepository:
     def account(self) -> Account:
         row = self._db.execute(
             "SELECT name, point, vip_point, experience "
-            "FROM accounts WHERE identity=?", (self._identity,),
+            "FROM accounts WHERE identity=?",
+            (self._identity,),
         ).fetchone()
         if row is None:
             raise FarmError("not_registered")
@@ -32,7 +43,8 @@ class SQLiteRepository:
 
     def register(self, name: str) -> bool:
         exists = self._db.execute(
-            "SELECT 1 FROM accounts WHERE identity=?", (self._identity,),
+            "SELECT 1 FROM accounts WHERE identity=?",
+            (self._identity,),
         ).fetchone()
         if exists:
             return False
@@ -71,8 +83,12 @@ class SQLiteRepository:
             "identity, operation_id, asset, delta, reason, created_at"
             ") VALUES (?, ?, ?, ?, ?, ?)",
             (
-                self._identity, self._operation_id, asset.value, delta,
-                self._action, self._now,
+                self._identity,
+                self._operation_id,
+                asset.value,
+                delta,
+                self._action,
+                self._now,
             ),
         )
 
@@ -80,18 +96,21 @@ class SQLiteRepository:
         rows = self._db.execute(
             "SELECT action, result FROM operations WHERE identity=? "
             "AND action IN ('legacy_import', 'register') "
-            "ORDER BY created_at, rowid", (self._identity,),
+            "ORDER BY created_at, rowid",
+            (self._identity,),
         ).fetchall()
         try:
             for row in rows:
-                data = json.loads(row['result'])
-                if row['action'] == 'legacy_import':
-                    if (type(data.get('migration_version')) is int
-                            and data['migration_version'] == 1
-                            and data.get('legacy_rows', {}).get('user')):
+                data = json.loads(row["result"])
+                if row["action"] == "legacy_import":
+                    if (
+                        type(data.get("migration_version")) is int
+                        and data["migration_version"] == 1
+                        and data.get("legacy_rows", {}).get("user")
+                    ):
                         return 3
-                elif data.get('created') is True:
-                    count = data.get('plot_count', 3)
+                elif data.get("created") is True:
+                    count = data.get("plot_count", 3)
                     if type(count) is int and count in (3, 6):
                         return count
                     return None
@@ -104,7 +123,7 @@ class SQLiteRepository:
 
         integer(slot, 1, SUPPORTED_PLOTS)
         self._db.execute(
-            'INSERT INTO plots(identity, slot) VALUES (?, ?)',
+            "INSERT INTO plots(identity, slot) VALUES (?, ?)",
             (self._identity, slot),
         )
 
@@ -117,18 +136,25 @@ class SQLiteRepository:
         if row is None:
             return InventoryItem(plant.name, plant_id=plant.plant_id)
         return InventoryItem(
-            plant.name, row["seeds"], row["crops"], bool(row["locked"]),
+            plant.name,
+            row["seeds"],
+            row["crops"],
+            bool(row["locked"]),
             plant.plant_id,
         )
 
     def items(self) -> tuple[InventoryItem, ...]:
         rows = self._db.execute(
             "SELECT plant_id, name, seeds, crops, locked FROM inventory "
-            "WHERE identity=? ORDER BY name, plant_id", (self._identity,),
+            "WHERE identity=? ORDER BY name, plant_id",
+            (self._identity,),
         ).fetchall()
         return tuple(
             InventoryItem(
-                r["name"], r["seeds"], r["crops"], bool(r["locked"]),
+                r["name"],
+                r["seeds"],
+                r["crops"],
+                bool(r["locked"]),
                 r["plant_id"],
             )
             for r in rows
@@ -166,11 +192,18 @@ class SQLiteRepository:
                 Plot(
                     r["slot"],
                     Plant(**json.loads(r["plant"])) if r["plant"] else None,
-                    r["mature_at"], r["harvest_count"],
-                    r["yield_bonus"], r["experience_bonus"],
-                    r["pest_count"], r["pest_spawned"], r["growth_remaining"],
-                    r["growth_updated_at"], r["next_pest_at"],
-                    r["maturity_pests"], r['stolen_count'], r['land_level'],
+                    r["mature_at"],
+                    r["harvest_count"],
+                    r["yield_bonus"],
+                    r["experience_bonus"],
+                    r["pest_count"],
+                    r["pest_spawned"],
+                    r["growth_remaining"],
+                    r["growth_updated_at"],
+                    r["next_pest_at"],
+                    r["maturity_pests"],
+                    r["stolen_count"],
+                    r["land_level"],
                 )
                 for r in rows
             )
@@ -180,7 +213,8 @@ class SQLiteRepository:
     def save_plot(self, plot: Plot) -> None:
         data = (
             json.dumps(asdict(plot.plant), ensure_ascii=False)
-            if plot.plant else None
+            if plot.plant
+            else None
         )
         cursor = self._db.execute(
             "UPDATE plots SET plant=?, mature_at=?, harvest_count=?, "
@@ -189,11 +223,21 @@ class SQLiteRepository:
             "maturity_pests=?, stolen_count=?, land_level=? "
             "WHERE identity=? AND slot=?",
             (
-                data, plot.mature_at, plot.harvest_count, plot.yield_bonus,
-                plot.experience_bonus, plot.pest_count, plot.pest_spawned,
-                plot.growth_remaining, plot.growth_updated_at,
-                plot.next_pest_at, plot.maturity_pests, plot.stolen_count,
-                plot.land_level, self._identity, plot.slot,
+                data,
+                plot.mature_at,
+                plot.harvest_count,
+                plot.yield_bonus,
+                plot.experience_bonus,
+                plot.pest_count,
+                plot.pest_spawned,
+                plot.growth_remaining,
+                plot.growth_updated_at,
+                plot.next_pest_at,
+                plot.maturity_pests,
+                plot.stolen_count,
+                plot.land_level,
+                self._identity,
+                plot.slot,
             ),
         )
         if cursor.rowcount != 1:
@@ -201,27 +245,35 @@ class SQLiteRepository:
 
     def for_identity(self, identity):
         """同一事务内访问目标账户，禁止独立提交。"""
-        return SQLiteRepository(self._db, identity.key, self._operation_id,
-                                self._action, self._now)
+        return SQLiteRepository(
+            self._db, identity.key, self._operation_id, self._action, self._now
+        )
 
     def theft_seen(self, slot, thief):
-        return self._db.execute(
-            'SELECT 1 FROM thefts WHERE owner=? AND slot=? AND thief=?',
-            (self._identity, slot, thief.key),
-        ).fetchone() is not None
+        return (
+            self._db.execute(
+                "SELECT 1 FROM thefts WHERE owner=? AND slot=? AND thief=?",
+                (self._identity, slot, thief.key),
+            ).fetchone()
+            is not None
+        )
 
     def record_theft(self, slot, thief):
-        self._db.execute('INSERT INTO thefts VALUES (?, ?, ?)',
-                         (self._identity, slot, thief.key))
+        self._db.execute(
+            "INSERT INTO thefts VALUES (?, ?, ?)",
+            (self._identity, slot, thief.key),
+        )
 
     def clear_thefts(self, slot):
-        self._db.execute('DELETE FROM thefts WHERE owner=? AND slot=?',
-                         (self._identity, slot))
+        self._db.execute(
+            "DELETE FROM thefts WHERE owner=? AND slot=?",
+            (self._identity, slot),
+        )
 
     def successful_thefts(self, day_start):
         return self._db.execute(
             "SELECT COUNT(*) FROM operations WHERE identity=? "
             "AND action='steal' AND created_at>=? AND created_at<? "
             "AND json_extract(result, '$.quantity')>0",
-            (self._identity, day_start, day_start+86400),
+            (self._identity, day_start, day_start + 86400),
         ).fetchone()[0]

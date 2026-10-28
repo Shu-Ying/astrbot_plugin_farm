@@ -1,16 +1,16 @@
 """从 service 仓库下载原版小赖字体，校验后原子写入本地缓存。"""
 
 import hashlib
-from importlib import resources
 import json
-from pathlib import Path
 import tempfile
+from importlib import resources
+from pathlib import Path
 from zipfile import ZipFile
+
+from astrbot.api import logger
 
 from .bundle import _LOCK, _copy_remote, validate_options
 
-
-from astrbot.api import logger
 FONT_NAME = "Xiaolai-Regular.ttf"
 FILES = {
     FONT_NAME: (
@@ -25,9 +25,14 @@ FILES = {
 
 
 def expected_manifest():
-    return json.loads(resources.files(__package__).joinpath(
-        "data", "font-manifest.json",
-    ).read_bytes())
+    return json.loads(
+        resources.files(__package__)
+        .joinpath(
+            "data",
+            "font-manifest.json",
+        )
+        .read_bytes()
+    )
 
 
 def _valid(path, size, digest):
@@ -44,7 +49,9 @@ def _atomic_write(path, content):
     temporary = None
     try:
         with tempfile.NamedTemporaryFile(
-            dir=path.parent, suffix=".download", delete=False,
+            dir=path.parent,
+            suffix=".download",
+            delete=False,
         ) as stream:
             temporary = Path(stream.name)
             stream.write(content)
@@ -60,29 +67,32 @@ def ensure_font(data_dir, source="Github", service_url=""):
     manifest = expected_manifest()
     root = Path(data_dir) / "fonts" / manifest["sha256"]
     with _LOCK:
-        if all(_valid(root / name, *checks)
-               for name, checks in FILES.items()):
-            logger.info('农场字体：复用已校验缓存')
+        if all(_valid(root / name, *checks) for name, checks in FILES.items()):
+            logger.info("农场字体：复用已校验缓存")
             return root / FONT_NAME
         root.mkdir(parents=True, exist_ok=True)
         archive_path = root / "assets.zip"
-        if not _valid(archive_path, manifest["size_bytes"],
-                      manifest["sha256"]):
+        if not _valid(archive_path, manifest["size_bytes"], manifest["sha256"]):
             url = (
-                service_url.rstrip("/") + "/v1/fonts/"
-                + manifest["sha256"] + "/assets.zip"
+                service_url.rstrip("/")
+                + "/v1/fonts/"
+                + manifest["sha256"]
+                + "/assets.zip"
                 if source == "farm_service"
                 else manifest["sources"][source.lower()]
             )
             temporary = None
             try:
                 with tempfile.NamedTemporaryFile(
-                    dir=root, suffix=".download", delete=False,
+                    dir=root,
+                    suffix=".download",
+                    delete=False,
                 ) as stream:
                     temporary = Path(stream.name)
                     _copy_remote(url, stream, manifest["size_bytes"])
-                if not _valid(temporary, manifest["size_bytes"],
-                              manifest["sha256"]):
+                if not _valid(
+                    temporary, manifest["size_bytes"], manifest["sha256"]
+                ):
                     raise ValueError("Font archive size or SHA256 mismatch")
                 temporary.replace(archive_path)
             finally:
@@ -90,8 +100,9 @@ def ensure_font(data_dir, source="Github", service_url=""):
                     temporary.unlink(missing_ok=True)
         with ZipFile(archive_path) as archive:
             entries = archive.infolist()
-            if (len(entries) != len(FILES)
-                    or {item.filename for item in entries} != set(FILES)):
+            if len(entries) != len(FILES) or {
+                item.filename for item in entries
+            } != set(FILES):
                 raise ValueError("Unexpected font archive contents")
             content = {}
             for item in entries:
@@ -105,5 +116,5 @@ def ensure_font(data_dir, source="Github", service_url=""):
         # 先写许可，再使字体可用；不使用 extractall 或远端提供的路径。
         for name in ("OFL-Xiaolai.txt", FONT_NAME):
             _atomic_write(root / name, content[name])
-        logger.info('农场字体和许可证校验通过')
+        logger.info("农场字体和许可证校验通过")
         return root / FONT_NAME

@@ -1,13 +1,12 @@
 """QQ/OneBot头像读取；固定来源、有界缓存和可关闭的异步请求。"""
 
 import asyncio
-from collections import OrderedDict
 import re
+from collections import OrderedDict
 from time import monotonic
 
 import aiohttp
 from astrbot.api import logger
-
 
 MAX_BYTES = 2 * 1024 * 1024
 MAX_ENTRIES = 16
@@ -16,17 +15,19 @@ FETCH_TIMEOUT = 2
 
 async def download_avatar(user_id):
     """只访问固定腾讯HTTPS端点，不跟随重定向或读取用户提供的URL。"""
-    if not re.fullmatch(r'[0-9]{1,20}', user_id):
+    if not re.fullmatch(r"[0-9]{1,20}", user_id):
         return None
-    url = f'https://q1.qlogo.cn/g?b=qq&nk={user_id}&s=100'
+    url = f"https://q1.qlogo.cn/g?b=qq&nk={user_id}&s=100"
     timeout = aiohttp.ClientTimeout(total=FETCH_TIMEOUT)
     async with aiohttp.ClientSession(timeout=timeout) as session:
         async with session.get(url, allow_redirects=False) as response:
             response.raise_for_status()
             if response.status != 200:
                 return None
-            if (response.content_length is not None
-                    and response.content_length > MAX_BYTES):
+            if (
+                response.content_length is not None
+                and response.content_length > MAX_BYTES
+            ):
                 return None
             content = bytearray()
             async for chunk in response.content.iter_chunked(65536):
@@ -46,8 +47,11 @@ class AvatarCache:
 
     async def get(self, platform, user_id):
         user_id = str(user_id)
-        if (self._closed or platform != 'aiocqhttp'
-                or not re.fullmatch(r'[0-9]{1,20}', user_id)):
+        if (
+            self._closed
+            or platform != "aiocqhttp"
+            or not re.fullmatch(r"[0-9]{1,20}", user_id)
+        ):
             return None
         cached = self._cache.get(user_id)
         if cached and cached[0] > monotonic():
@@ -64,19 +68,24 @@ class AvatarCache:
     async def _fetch(self, user_id):
         try:
             content = await asyncio.wait_for(
-                download_avatar(user_id), timeout=FETCH_TIMEOUT,
+                download_avatar(user_id),
+                timeout=FETCH_TIMEOUT,
             )
-            if (not isinstance(content, bytes) or not content
-                    or len(content) > MAX_BYTES):
+            if (
+                not isinstance(content, bytes)
+                or not content
+                or len(content) > MAX_BYTES
+            ):
                 content = None
         except Exception:
             # 不记录QQ号、完整URL和异常中的潜在身份信息。
-            logger.warning('farm astrbot avatar unavailable; using default')
+            logger.warning("farm astrbot avatar unavailable; using default")
             content = None
         finally:
             self._pending.pop(user_id, None)
         self._cache[user_id] = (
-            monotonic() + (300 if content else 30), content,
+            monotonic() + (300 if content else 30),
+            content,
         )
         self._cache.move_to_end(user_id)
         while len(self._cache) > MAX_ENTRIES:

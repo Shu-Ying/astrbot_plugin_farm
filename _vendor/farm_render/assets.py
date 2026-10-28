@@ -1,10 +1,10 @@
 """包内素材与有界 LRU；不下载、不解压到磁盘、不暴露共享图片。"""
 
+import json
 from collections import OrderedDict
 from copy import deepcopy
 from importlib import resources
 from io import BytesIO
-import json
 from threading import RLock
 from zipfile import ZipFile
 
@@ -43,23 +43,43 @@ class ByteLRU:
 
 
 class Assets:
-    def __init__(self, cache_bytes=32 * 1024 * 1024, bundle_path=None,
-                 metadata=None, soils_path=None):
+    def __init__(
+        self,
+        cache_bytes=32 * 1024 * 1024,
+        bundle_path=None,
+        metadata=None,
+        soils_path=None,
+    ):
         data = resources.files(__package__).joinpath("data")
-        self.metadata = (deepcopy(metadata) if metadata is not None else
-                         json.loads(data.joinpath('metadata.json')
-                                    .read_bytes()))
+        self.metadata = (
+            deepcopy(metadata)
+            if metadata is not None
+            else json.loads(data.joinpath("metadata.json").read_bytes())
+        )
         self.cache = ByteLRU(cache_bytes)
-        self._soils = soils_path or data.joinpath('land-soils.zip')
-        self._bundle = (bundle_path if bundle_path is not None
-                        else data.joinpath('assets.zip'))
+        self._soils = soils_path or data.joinpath("land-soils.zip")
+        self._bundle = (
+            bundle_path
+            if bundle_path is not None
+            else data.joinpath("assets.zip")
+        )
 
     def image(self, name, size=None):
-        upgrade = name in ('soil/红土地.png', 'soil/黑土地.png', 'soil/金土地.png')
+        upgrade = name in (
+            "soil/红土地.png",
+            "soil/黑土地.png",
+            "soil/金土地.png",
+        )
         if not upgrade and name not in self.metadata["images"]:
             raise KeyError("Unknown packaged image")
-        size = tuple(size or (self.metadata['soil_size'] if upgrade
-                              else self.metadata["images"][name]["size"]))
+        size = tuple(
+            size
+            or (
+                self.metadata["soil_size"]
+                if upgrade
+                else self.metadata["images"][name]["size"]
+            )
+        )
         key = (name, size)
         cached = self.cache.get(key)
         if cached is None:

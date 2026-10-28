@@ -3,7 +3,14 @@
 from typing import Any, Callable, Protocol
 
 from .domain import (
-    Account, Asset, Identity, InventoryItem, Plot, Plant, Receipt, Snapshot,
+    Account,
+    Asset,
+    Identity,
+    InventoryItem,
+    Plant,
+    Plot,
+    Receipt,
+    Snapshot,
 )
 
 
@@ -26,8 +33,12 @@ class Store(Protocol):
     async def close(self) -> None: ...
 
     async def transact(
-        self, identity: Identity, operation_id: str, action: str,
-        parameters: dict[str, Any], now: int,
+        self,
+        identity: Identity,
+        operation_id: str,
+        action: str,
+        parameters: dict[str, Any],
+        now: int,
         operation: Callable[[Repository], dict[str, Any]],
     ) -> Receipt: ...
 

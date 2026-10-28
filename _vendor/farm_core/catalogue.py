@@ -1,7 +1,7 @@
 """只读、离线作物目录加载。"""
 
-from importlib import resources
 import json
+from importlib import resources
 from types import MappingProxyType
 
 from .domain import FarmError, Plant, text
@@ -56,7 +56,9 @@ class Catalogue:
 
     @classmethod
     def bundled(cls) -> "Catalogue":
-        content = resources.files(__package__).joinpath(
-            "data", "plants.json"
-        ).read_bytes()
+        content = (
+            resources.files(__package__)
+            .joinpath("data", "plants.json")
+            .read_bytes()
+        )
         return cls.loads(content)

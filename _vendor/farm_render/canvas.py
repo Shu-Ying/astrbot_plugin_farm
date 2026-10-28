@@ -42,22 +42,40 @@ class Canvas:
         if cls.measure_text(text, font_path, size) <= width:
             return text
         suffix = "…"
-        while text and cls.measure_text(
-            text + suffix, font_path, size,
-        ) > width:
+        while (
+            text
+            and cls.measure_text(
+                text + suffix,
+                font_path,
+                size,
+            )
+            > width
+        ):
             text = text[:-1]
-        return text + suffix if cls.measure_text(
-            suffix, font_path, size,
-        ) <= width else ""
+        return (
+            text + suffix
+            if cls.measure_text(
+                suffix,
+                font_path,
+                size,
+            )
+            <= width
+            else ""
+        )
 
     def text(self, position, text, font_path, size, color):
         ImageDraw.Draw(self.image).text(
-            position, text, font=font(font_path, size), fill=color,
+            position,
+            text,
+            font=font(font_path, size),
+            fill=color,
         )
 
     def rectangle(self, box, color, radius=0):
         ImageDraw.Draw(self.image).rounded_rectangle(
-            box, radius=radius, fill=color,
+            box,
+            radius=radius,
+            fill=color,
         )
 
     def encode(self, codec, quality=75, method=2):
@@ -68,7 +86,10 @@ class Canvas:
             flattened.save(output, "JPEG", quality=quality)
         elif codec == "WEBP":
             self.image.save(
-                output, "WEBP", quality=quality, method=method,
+                output,
+                "WEBP",
+                quality=quality,
+                method=method,
             )
         elif codec == "PNG":
             self.image.save(output, "PNG", compress_level=3)

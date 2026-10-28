@@ -1,9 +1,9 @@
 """不可变领域数据及源自旧版的纯计算规则。"""
 
+import json
 from dataclasses import asdict, dataclass
 from enum import Enum
 from math import isqrt
-import json
 from typing import Any
 
 MAX_VALUE = 2**63 - 1
@@ -82,7 +82,8 @@ class Identity:
     @property
     def key(self) -> str:
         return json.dumps(
-            list(asdict(self).values()), ensure_ascii=False,
+            list(asdict(self).values()),
+            ensure_ascii=False,
             separators=(",", ":"),
         )
 
@@ -115,7 +116,10 @@ class Plant:
             raise FarmError("invalid_catalogue")
         integer(self.crop_type, 1)
         for name in (
-            "plant_id", "growth_seconds", "crop", "regrowth_seconds",
+            "plant_id",
+            "growth_seconds",
+            "crop",
+            "regrowth_seconds",
             "harvest",
         ):
             integer(getattr(self, name), 1)
@@ -138,8 +142,16 @@ class Plant:
     def from_legacy(cls, row: dict[str, Any]) -> "Plant":
         try:
             for key in (
-                "id", "level", "buy", "isVip", "vipBuy", "experience",
-                "harvest", "price", "time", "crop",
+                "id",
+                "level",
+                "buy",
+                "isVip",
+                "vipBuy",
+                "experience",
+                "harvest",
+                "price",
+                "time",
+                "crop",
             ):
                 integer(row[key])
             if row["isVip"] not in (0, 1):
@@ -151,8 +163,9 @@ class Plant:
             if not isinstance(row["phase"], str):
                 raise FarmError("invalid_catalogue")
             parts = row["phase"].split(",")
-            if not parts or any(not p.isascii() or not p.isdigit()
-                                for p in parts):
+            if not parts or any(
+                not p.isascii() or not p.isdigit() for p in parts
+            ):
                 raise FarmError("invalid_catalogue")
             phases = list(dict.fromkeys(int(part) for part in parts))
             for phase in phases:
@@ -160,10 +173,18 @@ class Plant:
             if len(phases) < 2 or phases != sorted(phases):
                 raise FarmError("invalid_catalogue")
             return cls(
-                row["id"], row["name"], row["level"], row["buy"],
-                bool(row["isVip"]), row["vipBuy"], row["experience"],
-                row["harvest"], row["price"], row["time"] * 3600,
-                row["crop"], sum(phases[1:]),
+                row["id"],
+                row["name"],
+                row["level"],
+                row["buy"],
+                bool(row["isVip"]),
+                row["vipBuy"],
+                row["experience"],
+                row["harvest"],
+                row["price"],
+                row["time"] * 3600,
+                row["crop"],
+                sum(phases[1:]),
                 purchasable=bool(row.get("isBuy", 1)),
                 enabled=bool(row.get("enabled", 1)),
                 crop_type=row.get("crop_type", 1),
@@ -222,17 +243,20 @@ class Plot:
         integer(self.pest_count, 0, 3)
         integer(self.pest_spawned, self.pest_count, 3)
         integer(self.maturity_pests, 0, 3)
-        for value in (self.growth_remaining, self.growth_updated_at,
-                      self.next_pest_at):
+        for value in (
+            self.growth_remaining,
+            self.growth_updated_at,
+            self.next_pest_at,
+        ):
             if value is not None:
                 integer(value)
-        if (self.growth_remaining is None) != (
-            self.growth_updated_at is None
-        ):
+        if (self.growth_remaining is None) != (self.growth_updated_at is None):
             raise FarmError("invalid_growth_state")
-        if (self.growth_updated_at is not None
-                and self.next_pest_at is not None
-                and self.next_pest_at < self.growth_updated_at):
+        if (
+            self.growth_updated_at is not None
+            and self.next_pest_at is not None
+            and self.next_pest_at < self.growth_updated_at
+        ):
             raise FarmError("invalid_growth_state")
 
     @property

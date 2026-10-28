@@ -20,15 +20,22 @@ class RenderOptions:
         if type(self.show_plot_ids) is not bool:
             raise ValueError("Invalid plot ID option")
         for value, low, high in (
-            (self.width, 256, 3072), (self.quality, 1, 95),
+            (self.width, 256, 3072),
+            (self.quality, 1, 95),
             (self.method, 0, 6),
         ):
             if type(value) is not int or not low <= value <= high:
                 raise ValueError("Invalid render option")
         if self.format not in ("AUTO", "WEBP", "JPEG", "PNG"):
             raise ValueError("Unsupported output format")
-        if self.theme not in ("default", "spring", "summer", "autumn",
-                              "winter", "bee"):
+        if self.theme not in (
+            "default",
+            "spring",
+            "summer",
+            "autumn",
+            "winter",
+            "bee",
+        ):
             raise ValueError("Unsupported theme")
 
     @classmethod

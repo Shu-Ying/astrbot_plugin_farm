@@ -6,6 +6,10 @@ from .domain import Asset, FarmError, Identity
 from .storage import SQLiteStore
 
 __all__ = [
-    "Asset", "Catalogue", "FarmError", "FarmService", "Identity",
+    "Asset",
+    "Catalogue",
+    "FarmError",
+    "FarmService",
+    "Identity",
     "SQLiteStore",
 ]

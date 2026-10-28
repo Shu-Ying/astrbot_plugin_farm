@@ -4,9 +4,12 @@ from .domain import boosted
 
 
 def season_yield(plot):
-    return (boosted(plot.plant.harvest, plot.yield_bonus)
-            * (100-5*plot.maturity_pests)//100)
+    return (
+        boosted(plot.plant.harvest, plot.yield_bonus)
+        * (100 - 5 * plot.maturity_pests)
+        // 100
+    )
 
 
 def remaining_yield(plot):
-    return max(0, season_yield(plot)-plot.stolen_count)
+    return max(0, season_yield(plot) - plot.stolen_count)
